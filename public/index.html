@@ -1,0 +1,158 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suporte · Menu de Ferramentas</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+    .modgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px
+    }
+
+    @media(max-width:620px) {
+        .modgrid {
+            grid-template-columns: 1fr
+        }
+    }
+
+    .modcard {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+        text-decoration: none;
+        color: var(--ink);
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        transition: border-color .15s, transform .1s;
+    }
+
+    .modcard:hover {
+        border-color: var(--stamp);
+        transform: translateY(-1px);
+    }
+
+    .modcard.soon {
+        cursor: default;
+        opacity: .55;
+    }
+
+    .modcard.soon:hover {
+        border-color: var(--rule);
+        transform: none;
+    }
+
+    .modicon {
+        flex: 0 0 auto;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--rule);
+        color: var(--stamp);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 650;
+    }
+
+    .modcard.soon .modicon {
+        background: var(--rule);
+        color: var(--ink-faint);
+    }
+
+    .modbody h2 {
+        font-size: 15px;
+        margin: 0 0 3px;
+        font-weight: 650;
+    }
+
+    .modbody p {
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        margin: 0;
+    }
+
+    .tagsoon {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        border: 1px solid var(--rule-strong);
+        border-radius: 20px;
+        padding: 1px 8px;
+        margin-top: 6px;
+    }
+</style>
+
+<div class="wrap">
+    <p class="eyebrow">Suporte · Ferramentas Fiscais</p>
+    <h1>Menu de módulos</h1>
+    <p class="sub">Selecione o módulo que deseja utilizar. Novas calculadoras e utilitários serão adicionados aqui conforme forem desenvolvidos.</p>
+
+    <div class="modgrid">
+        <a class="modcard" href="Diferimento.html">
+            <span class="modicon">%</span>
+            <span class="modbody">
+                <h2>Diferimento de ICMS</h2>
+                <p>Calcula o diferimento parcial de ICMS (CST 51) e os campos da NF-e.</p>
+            </span>
+        </a>
+
+        <a class="modcard" href="fechamento.html">
+            <span class="modicon">✓</span>
+            <span class="modbody">
+                <h2>Fechamento de Mês</h2>
+                <p>Controle de clientes e status de envio mensal, separado por mês.</p>
+            </span>
+        </a>
+
+        <a class="modcard" href="consulta-cnpj.html">
+            <span class="modicon">🔎</span>
+            <span class="modbody">
+                <h2>Consulta CNPJ</h2>
+                <p>Razão social, CNAE, situação cadastral, endereço e Inscrição Estadual por estado.</p>
+            </span>
+        </a>
+
+        <a class="modcard" href="videos.html">
+            <span class="modicon">▶</span>
+            <span class="modbody">
+                <h2>Vídeos Tutoriais</h2>
+                <p>Busque pelo assunto e pegue o link do vídeo pra enviar ao cliente.</p>
+            </span>
+        </a>
+
+        <a class="modcard" href="arquivos.html">
+            <span class="modicon">📁</span>
+            <span class="modbody">
+                <h2>Arquivos</h2>
+                <p>Pastas com instaladores e arquivos comuns, prontos pra baixar.</p>
+            </span>
+        </a>
+
+        <a class="modcard" href="escala.html">
+            <span class="modicon">📅</span>
+            <span class="modbody">
+                <h2>Escala de Sábados</h2>
+                <p>Rodízio do plantão de sábado, com troca e reatribuição entre a equipe.</p>
+            </span>
+        </a>
+
+        <a class="modcard" href="agenda.html">
+            <span class="modicon">📆</span>
+            <span class="modbody">
+                <h2>Agenda</h2>
+                <p>Compromissos com horário marcado e tarefas da equipe, num calendário compartilhado.</p>
+            </span>
+        </a>
+    </div>
+
+    <footer>menu local · dados compartilhados pela rede interna</footer>
+</div>
+
+<script src="shared.js"></script>

@@ -1,0 +1,21 @@
+{
+  "name": "luxmenu",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "import": "node server/seed/import_clientes.js",
+    "import-videos": "node server/seed/import_videos.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "express": "^5.2.1",
+    "multer": "^2.2.0"
+  }
+}

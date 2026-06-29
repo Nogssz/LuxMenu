@@ -1,0 +1,287 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consulta CNPJ</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+    .buscabox {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .buscabox .ibox {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--rule-strong);
+        border-radius: 9px;
+        background: var(--card);
+        overflow: hidden;
+    }
+
+    .buscabox .ibox:focus-within {
+        border-color: var(--stamp);
+        box-shadow: 0 0 0 3px rgba(35, 70, 83, .12)
+    }
+
+    .buscabox input {
+        border: 0;
+        outline: 0;
+        background: transparent;
+        width: 100%;
+        padding: 11px 12px;
+        font-family: var(--mono);
+        font-size: 16px;
+        color: var(--ink);
+    }
+
+    .btn {
+        border: 1px solid var(--stamp);
+        background: var(--stamp);
+        color: #fff;
+        border-radius: 9px;
+        padding: 0 18px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        opacity: .9;
+    }
+
+    .btn:disabled {
+        opacity: .5;
+        cursor: default;
+    }
+
+    .hint {
+        font-size: 12px;
+        color: var(--ink-faint);
+        margin-bottom: 18px;
+    }
+
+    .msg {
+        border-radius: 9px;
+        padding: 10px 13px;
+        font-size: 13px;
+        margin-bottom: 14px;
+        display: none;
+    }
+
+    .msg.show {
+        display: block;
+    }
+
+    .msg.erro {
+        background: #FBEBE7;
+        border: 1px solid #E9C4BA;
+        color: #9A3B22;
+    }
+
+    .msg.info {
+        background: var(--recolher-bg);
+        border: 1px solid #BFE0CE;
+        color: var(--recolher);
+    }
+
+    .resultado {
+        display: none;
+    }
+
+    .resultado.show {
+        display: block;
+    }
+
+    .rhead {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .rhead h2 {
+        margin: 0;
+        font-size: 18px;
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--ink);
+        font-weight: 650;
+    }
+
+    .rhead .fantasia {
+        font-size: 13px;
+        color: var(--ink-soft);
+    }
+
+    .badge {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: .04em;
+        border-radius: 20px;
+        padding: 2px 10px;
+        font-weight: 600;
+    }
+
+    .badge.ativa {
+        background: var(--recolher-bg);
+        color: var(--recolher);
+    }
+
+    .badge.outra {
+        background: var(--diferido-bg);
+        color: var(--diferido);
+    }
+
+    .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: var(--rule);
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 14px;
+    }
+
+    @media(max-width:560px) {
+        .grid2 {
+            grid-template-columns: 1fr
+        }
+    }
+
+    .gcell {
+        background: var(--card);
+        padding: 11px 14px;
+    }
+
+    .gcell .tag {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--ink-faint);
+        letter-spacing: .04em;
+    }
+
+    .gcell .gv {
+        font-size: 14px;
+        margin-top: 2px;
+    }
+
+    .cachenote {
+        font-size: 12px;
+        color: var(--ink-faint);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .cachenote button {
+        font-family: var(--mono);
+        font-size: 11px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 7px;
+        padding: 4px 10px;
+        cursor: pointer;
+    }
+
+    .cachenote button:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
+
+    .listmini span {
+        display: inline-block;
+        font-size: 12.5px;
+        background: var(--rule);
+        border: 1px solid var(--rule);
+        border-radius: 20px;
+        padding: 3px 10px;
+        margin: 2px 4px 0 0;
+    }
+
+    .listmini span.inativa {
+        color: var(--ink-faint);
+        text-decoration: line-through;
+    }
+
+    .muted {
+        color: var(--ink-faint);
+        font-size: 12.5px;
+    }
+</style>
+
+<div class="wrap">
+    <a class="backnav" href="index.html">← Menu</a>
+    <p class="eyebrow">Suporte · Cadastro</p>
+    <h1>Consulta CNPJ</h1>
+    <p class="sub">Busca dados públicos da Receita Federal e Inscrição Estadual por estado (razão social, CNAE, situação cadastral, endereço, IE).</p>
+
+    <div class="card">
+        <div class="buscabox">
+            <div class="ibox"><input id="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00"></div>
+            <button class="btn" id="btnBuscar">Consultar</button>
+        </div>
+        <div class="hint">Só números ou formatado, tanto faz.</div>
+
+        <div class="msg erro" id="msgErro"></div>
+        <div class="msg info" id="msgCliente"></div>
+
+        <div class="resultado" id="resultado">
+            <div class="rhead">
+                <div>
+                    <h2 id="r-razao"></h2>
+                    <div class="fantasia" id="r-fantasia"></div>
+                </div>
+                <span class="badge" id="r-situacao"></span>
+            </div>
+
+            <div class="grid2">
+                <div class="gcell">
+                    <div class="tag">CNPJ</div>
+                    <div class="gv" id="r-cnpj"></div>
+                </div>
+                <div class="gcell">
+                    <div class="tag">PORTE</div>
+                    <div class="gv" id="r-porte"></div>
+                </div>
+                <div class="gcell">
+                    <div class="tag">CNAE PRINCIPAL</div>
+                    <div class="gv" id="r-cnae"></div>
+                </div>
+                <div class="gcell">
+                    <div class="tag">NATUREZA JURÍDICA</div>
+                    <div class="gv" id="r-natureza"></div>
+                </div>
+                <div class="gcell">
+                    <div class="tag">ABERTURA</div>
+                    <div class="gv" id="r-abertura"></div>
+                </div>
+                <div class="gcell">
+                    <div class="tag">TELEFONE</div>
+                    <div class="gv" id="r-telefone"></div>
+                </div>
+                <div class="gcell" style="grid-column: 1 / -1">
+                    <div class="tag">ENDEREÇO</div>
+                    <div class="gv" id="r-endereco"></div>
+                </div>
+            </div>
+
+            <div class="tag" style="margin-bottom: 6px">INSCRIÇÕES ESTADUAIS</div>
+            <div class="listmini" id="r-ies" style="margin-bottom: 14px"></div>
+
+            <div class="cachenote">
+                <span id="r-cacheinfo"></span>
+                <button id="btnAtualizar">atualizar dados</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>dados públicos via cnpj.ws · limite de 3 consultas/min compartilhado</footer>
+</div>
+
+<script src="shared.js"></script>
+<script src="consulta-cnpj.js"></script>

@@ -1,0 +1,174 @@
+:root {
+    --paper: #F3F4F1;
+    --card: #FBFBF9;
+    --ink: #1B2A33;
+    --ink-soft: #5C6B73;
+    --ink-faint: #8A969C;
+    --rule: #DADED6;
+    --rule-strong: #C3C9C0;
+    --recolher: #0F7A52;
+    --recolher-bg: #E7F2EC;
+    --diferido: #A9690D;
+    --diferido-bg: #F6EDDD;
+    --stamp: #234653;
+    --shadow: 0 1px 2px rgba(27, 42, 51, .06), 0 8px 30px rgba(27, 42, 51, .07);
+    --mono: "SFMono-Regular", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --pessoa-1: #2C6E8E;
+    --pessoa-2: #3A8C63;
+    --pessoa-3: #A9690D;
+    --pessoa-4: #7A4FA3;
+    --pessoa-5: #B23B5E;
+}
+
+html[data-theme="dark"] {
+    --paper: #1B2024;
+    --card: #242B30;
+    --ink: #ECEEF0;
+    --ink-soft: #B7C0C5;
+    --ink-faint: #7C8890;
+    --rule: #343D43;
+    --rule-strong: #445057;
+    --recolher: #3FCB8E;
+    --recolher-bg: #16332A;
+    --diferido: #E2A23B;
+    --diferido-bg: #3A2D14;
+    --stamp: #5AA6C2;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 30px rgba(0, 0, 0, .5);
+    --pessoa-1: #5AA6C2;
+    --pessoa-2: #3FCB8E;
+    --pessoa-3: #E2A23B;
+    --pessoa-4: #B98AE0;
+    --pessoa-5: #E27CA0;
+}
+
+* {
+    box-sizing: border-box
+}
+
+html,
+body {
+    margin: 0
+}
+
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 18px 48px;
+    line-height: 1.5;
+    transition: background .2s, color .2s;
+}
+
+/* Baseline pra qualquer input/select/textarea que não defina cor própria —
+   sem isso, no tema escuro o texto herda --ink (claro) sobre o fundo branco padrão do navegador e fica invisível. */
+input, select, textarea {
+    background: var(--card);
+    color: var(--ink);
+}
+
+.wrap {
+    max-width: 760px;
+    margin: 0 auto
+}
+
+.eyebrow {
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    margin: 0 0 6px;
+}
+
+h1 {
+    font-size: 25px;
+    line-height: 1.15;
+    margin: 0 0 4px;
+    font-weight: 650;
+    letter-spacing: -.01em;
+}
+
+.sub {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0 0 26px;
+    max-width: 54ch
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
+
+.card h2 {
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    margin: 0 0 16px;
+}
+
+.backnav {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    margin-bottom: 14px;
+}
+
+.backnav:hover {
+    color: var(--stamp);
+}
+
+footer {
+    margin-top: 30px;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-align: center;
+    font-family: var(--mono)
+}
+
+#temaToggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    width: 90px;
+    height: 46px;
+    padding: 3px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 46px;
+    background: var(--rule);
+    cursor: pointer;
+    z-index: 1000;
+    transition: background .2s, border-color .2s;
+}
+
+#temaToggle .bolinha {
+    display: block;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    transition: transform .25s ease;
+}
+
+#temaToggle.escuro .bolinha {
+    transform: translateX(44px);
+}
+
+#temaToggle .bolinha img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

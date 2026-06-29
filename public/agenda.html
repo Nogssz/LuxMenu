@@ -1,0 +1,507 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+    .wrap {
+        max-width: 1280px;
+    }
+
+    .card + .card {
+        margin-top: 16px;
+    }
+
+    .cal-card,
+    .tarefas-board-card {
+        padding: 16px;
+    }
+
+    .cal-card h2,
+    .tarefas-board-card h2 {
+        font-size: 11px;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        font-weight: 600;
+        margin: 0 0 14px;
+    }
+
+    .cal-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .cal-titulo {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 650;
+        color: var(--ink);
+        text-align: center;
+        text-transform: capitalize;
+    }
+
+    .navbtn {
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 7px;
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .navbtn:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
+
+    .btn {
+        border: 1px solid var(--stamp);
+        background: var(--stamp);
+        color: #fff;
+        border-radius: 7px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        opacity: .9;
+    }
+
+    .btn.secundario {
+        border-color: var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+    }
+
+    .btn.perigo {
+        border-color: #9A3B22;
+        background: #9A3B22;
+    }
+
+    .cal-grid-scroll {
+        overflow-x: auto;
+    }
+
+    .cal-grid {
+        display: grid;
+        grid-template-columns: 52px repeat(7, minmax(96px, 1fr));
+        min-width: 760px;
+    }
+
+    .cal-corner {
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .cal-day-head {
+        text-align: center;
+        font-size: 11px;
+        padding: 4px 2px 8px;
+        border-bottom: 1px solid var(--rule);
+        color: var(--ink-soft);
+    }
+
+    .cal-day-head .dnum {
+        font-size: 15px;
+        font-weight: 650;
+        color: var(--ink);
+        margin-top: 2px;
+    }
+
+    .cal-day-head.hoje {
+        color: var(--stamp);
+    }
+
+    .cal-day-head.hoje .dnum {
+        color: var(--stamp);
+    }
+
+    .cal-hours {
+        position: relative;
+    }
+
+    .cal-hour-label {
+        height: 44px;
+        font-size: 10.5px;
+        color: var(--ink-faint);
+        font-family: var(--mono);
+        padding-right: 6px;
+        text-align: right;
+        transform: translateY(-6px);
+    }
+
+    .cal-day-col {
+        position: relative;
+        border-left: 1px solid var(--rule);
+        background-image: repeating-linear-gradient(to bottom, var(--rule) 0, var(--rule) 1px, transparent 1px, transparent 44px);
+        cursor: pointer;
+    }
+
+    .cal-day-col.hoje {
+        background-color: var(--recolher-bg);
+    }
+
+    .compromisso {
+        position: absolute;
+        border-radius: 6px;
+        padding: 3px 6px;
+        font-size: 11px;
+        line-height: 1.25;
+        color: #fff;
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+    }
+
+    .compromisso .hora {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        opacity: .85;
+        display: block;
+    }
+
+    .tarefas-board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    @media(max-width: 900px) {
+        .tarefas-board {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media(max-width: 560px) {
+        .tarefas-board {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .coluna-pessoa {
+        min-width: 0;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .coluna-head {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 14.5px;
+        font-weight: 650;
+        color: var(--ink);
+    }
+
+    .coluna-head .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+    }
+
+    .add-tarefa-rapida {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .add-tarefa-rapida .linha-data-hora {
+        display: flex;
+        gap: 6px;
+    }
+
+    .add-tarefa-rapida input[type="text"] {
+        width: 100%;
+    }
+
+    .add-tarefa-rapida .linha-data-hora input {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .add-tarefa-rapida input {
+        border: 1px solid var(--rule-strong);
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-size: 13.5px;
+        font-family: var(--sans);
+    }
+
+    .add-tarefa-rapida input[type="date"],
+    .add-tarefa-rapida input[type="time"] {
+        padding: 7px 6px;
+        font-size: 12px;
+    }
+
+    .coluna-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        max-height: 380px;
+        overflow-y: auto;
+        padding-right: 4px;
+        scrollbar-width: thin;
+    }
+
+    .coluna-concluidas-lista {
+        max-height: 220px;
+        overflow-y: auto;
+        padding-right: 4px;
+        margin-top: 4px;
+        scrollbar-width: thin;
+    }
+
+    .item-compromisso {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        padding: 5px 7px;
+        border-left: 3px solid var(--stamp);
+        border-radius: 4px;
+        background: var(--card);
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .item-compromisso:hover {
+        border-left-color: var(--diferido);
+    }
+
+    .item-compromisso .hora {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--ink-faint);
+    }
+
+    .coluna-concluidas summary {
+        font-size: 10.5px;
+        color: var(--ink-faint);
+        cursor: pointer;
+        margin-top: 2px;
+    }
+
+    .tarefa-linha {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 7px 6px;
+        font-size: 13.5px;
+        border-radius: 7px;
+    }
+
+    .tarefa-linha:hover {
+        background: var(--card);
+    }
+
+    .tarefa-principal {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .tarefa-principal .tarefa-check {
+        margin-top: 3px;
+        flex: 0 0 auto;
+    }
+
+    .tarefa-linha .tit {
+        flex: 1;
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.35;
+    }
+
+    .tarefa-linha.feita .tit {
+        color: var(--ink-faint);
+        text-decoration: line-through;
+    }
+
+    .tarefa-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        padding-left: 26px;
+    }
+
+    .tarefa-data {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--ink-faint);
+        white-space: nowrap;
+    }
+
+    .tarefa-pessoa {
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 6px;
+        font-size: 11.5px;
+        padding: 3px 5px;
+        max-width: 120px;
+    }
+
+    .tarefa-del {
+        border: 0;
+        background: none;
+        color: var(--ink-faint);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0 4px;
+        margin-left: auto;
+    }
+
+    .tarefa-del:hover {
+        color: #9A3B22;
+    }
+
+    .vazio-grupo {
+        font-size: 12px;
+        color: var(--ink-faint);
+    }
+
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 16px;
+    }
+
+    .modal {
+        background: var(--card);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .modal h2 {
+        font-size: 15px;
+        margin: 0 0 14px;
+        color: var(--ink);
+    }
+
+    .modal label {
+        display: block;
+        font-size: 11.5px;
+        color: var(--ink-soft);
+        margin: 10px 0 4px;
+    }
+
+    .modal input,
+    .modal select,
+    .modal textarea {
+        width: 100%;
+        border: 1px solid var(--rule-strong);
+        border-radius: 7px;
+        padding: 7px 9px;
+        font-size: 13px;
+        font-family: var(--sans);
+    }
+
+    .modal .linha2 {
+        display: flex;
+        gap: 8px;
+    }
+
+    .modal .linha2>div {
+        flex: 1;
+    }
+
+    .modal-acoes {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .modal-acoes .espaco {
+        flex: 1;
+    }
+</style>
+
+<div class="wrap">
+    <a class="backnav" href="index.html">← Menu</a>
+    <p class="eyebrow">Suporte · Agenda</p>
+    <h1>Agenda</h1>
+    <p class="sub">Tarefas da equipe, com data, horário e responsável — cada pessoa com sua coluna. Compromissos marcados no calendário com responsável também aparecem na coluna dela.</p>
+
+    <div class="card tarefas-board-card">
+        <h2>Tarefas</h2>
+        <div class="tarefas-board" id="tarefasBoard"></div>
+    </div>
+
+    <div class="card cal-card">
+        <h2>Calendário</h2>
+        <div class="cal-header">
+            <button class="navbtn" id="btnSemanaAnterior" title="Semana anterior">←</button>
+            <div class="cal-titulo" id="tituloSemana"></div>
+            <button class="btn secundario" id="btnHoje">Hoje</button>
+            <button class="navbtn" id="btnSemanaSeguinte" title="Semana seguinte">→</button>
+        </div>
+        <div class="cal-grid-scroll">
+            <div class="cal-grid" id="calGrid"></div>
+        </div>
+    </div>
+
+    <footer>agenda compartilhada pela rede interna · LuxMenu</footer>
+</div>
+
+<div class="overlay" id="overlayCompromisso" style="display:none">
+    <div class="modal">
+        <h2 id="modalTitulo">Novo compromisso</h2>
+        <form id="formCompromisso">
+            <input type="hidden" id="compId">
+            <label for="compTitulo">Título</label>
+            <input type="text" id="compTitulo" required>
+
+            <label for="compDescricao">Descrição (opcional)</label>
+            <textarea id="compDescricao" rows="2"></textarea>
+
+            <label for="compData">Data</label>
+            <input type="date" id="compData" required>
+
+            <div class="linha2">
+                <div>
+                    <label for="compHoraInicio">Início</label>
+                    <input type="time" id="compHoraInicio" required>
+                </div>
+                <div>
+                    <label for="compHoraFim">Fim</label>
+                    <input type="time" id="compHoraFim" required>
+                </div>
+            </div>
+
+            <label for="compPessoa">Responsável (opcional)</label>
+            <select id="compPessoa">
+                <option value="">Sem responsável</option>
+            </select>
+
+            <div class="modal-acoes">
+                <button type="button" class="btn perigo" id="btnExcluirComp" style="display:none">Excluir</button>
+                <span class="espaco"></span>
+                <button type="button" class="btn secundario" id="btnCancelarComp">Cancelar</button>
+                <button type="submit" class="btn">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="shared.js"></script>
+<script src="agenda.js"></script>

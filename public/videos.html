@@ -1,0 +1,284 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vídeos Tutoriais</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+    .buscabox {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--rule-strong);
+        border-radius: 9px;
+        background: var(--card);
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+
+    .buscabox:focus-within {
+        border-color: var(--stamp);
+        box-shadow: 0 0 0 3px rgba(35, 70, 83, .12)
+    }
+
+    .buscabox input {
+        border: 0;
+        outline: 0;
+        background: transparent;
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 15px;
+        color: var(--ink);
+    }
+
+    .lista {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .vcard {
+        display: flex;
+        gap: 14px;
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        padding: 12px;
+        background: var(--card);
+    }
+
+    .vthumb {
+        flex: 0 0 auto;
+        width: 120px;
+        height: 68px;
+        border-radius: 8px;
+        background: var(--rule);
+        object-fit: cover;
+    }
+
+    .vbody {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .vbody h2 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 650;
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--ink);
+    }
+
+    .vbody .vdesc {
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        margin: 0 0 6px;
+    }
+
+    .vtags {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+
+    .vtags span {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        background: var(--rule);
+        border: 1px solid var(--rule);
+        border-radius: 20px;
+        padding: 2px 8px;
+        color: var(--ink-soft);
+    }
+
+    .vactions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .vactions button, .vactions a {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 7px;
+        padding: 4px 10px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .vactions a {
+        color: var(--ink-soft);
+    }
+
+    .vactions button:hover, .vactions a:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
+
+    .vactions button.copy.ok {
+        border-color: var(--recolher);
+        color: var(--recolher);
+    }
+
+    .vactions .del:hover {
+        border-color: #9A3B22;
+        color: #9A3B22;
+    }
+
+    .empty {
+        text-align: center;
+        color: var(--ink-faint);
+        padding: 30px 0;
+        font-size: 13px;
+    }
+
+    .toggle-admin {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 7px;
+        padding: 5px 11px;
+        cursor: pointer;
+        margin-top: 18px;
+    }
+
+    .toggle-admin:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
+
+    .admin {
+        margin-top: 14px;
+        display: none;
+    }
+
+    .admin.show {
+        display: block;
+    }
+
+    .admin .row2 {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .admin input {
+        flex: 1 1 160px;
+        border: 1px solid var(--rule-strong);
+        border-radius: 8px;
+        padding: 7px 10px;
+        font-size: 13px;
+    }
+
+    .btn {
+        border: 1px solid var(--stamp);
+        background: var(--stamp);
+        color: #fff;
+        border-radius: 8px;
+        padding: 7px 14px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        opacity: .9;
+    }
+
+    .btn.cancelar {
+        border-color: var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+    }
+
+    .catchips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .catchip {
+        font-size: 12.5px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 20px;
+        padding: 4px 12px;
+        cursor: pointer;
+    }
+
+    .catchip:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
+
+    .catchip.active {
+        background: var(--stamp);
+        border-color: var(--stamp);
+        color: #fff;
+    }
+
+    .vcategoria {
+        font-family: var(--mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--stamp);
+        margin-bottom: 3px;
+    }
+
+    .admin select {
+        flex: 1 1 160px;
+        border: 1px solid var(--rule-strong);
+        border-radius: 8px;
+        padding: 7px 10px;
+        font-size: 13px;
+        font-family: var(--sans);
+    }
+</style>
+
+<div class="wrap">
+    <a class="backnav" href="index.html">← Menu</a>
+    <p class="eyebrow">Suporte · Treinamento</p>
+    <h1>Vídeos Tutoriais</h1>
+    <p class="sub">Busque pelo assunto (ex: "nota de compra", "importação", "backup") e pegue o link pra enviar ao cliente.</p>
+
+    <div class="buscabox"><input id="busca" placeholder="Buscar por título, tema ou palavra-chave..." autofocus></div>
+
+    <div class="catchips" id="catchips"></div>
+
+    <div class="lista" id="lista"></div>
+    <div class="empty" id="empty" style="display:none">Nenhum vídeo encontrado para essa busca.</div>
+
+    <button class="toggle-admin" id="toggleAdmin">+ adicionar vídeo</button>
+
+    <div class="admin card" id="admin">
+        <h2 id="formTitulo">Novo vídeo</h2>
+        <input type="hidden" id="videoId">
+        <div class="row2">
+            <input id="vTitulo" placeholder="Título (ex: Como importar nota de compra)">
+            <input id="vUrl" placeholder="Link do YouTube">
+        </div>
+        <div class="row2">
+            <input id="vTags" placeholder="Palavras-chave separadas por vírgula (ex: nota, compra, importação)">
+            <select id="vCategoria"><option value="">Sem categoria</option></select>
+        </div>
+        <div class="row2">
+            <input id="novaCategoria" placeholder="Nova categoria (opcional)" style="flex: 0 1 180px">
+            <button class="btn cancelar" id="btnNovaCategoria">+ categoria</button>
+        </div>
+        <div class="row2">
+            <input id="vDescricao" placeholder="Descrição (opcional)">
+            <button class="btn" id="btnSalvar">Salvar</button>
+            <button class="btn cancelar" id="btnCancelar" style="display:none">Cancelar edição</button>
+        </div>
+    </div>
+
+    <footer>biblioteca local de vídeos · LuxMenu</footer>
+</div>
+
+<script src="shared.js"></script>
+<script src="videos.js"></script>

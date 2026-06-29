@@ -1,0 +1,177 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escala de Sábados</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+    .card + .card {
+        margin-top: 18px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    td {
+        color: var(--ink);
+    }
+
+    th {
+        font-size: 11px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        font-weight: 600;
+    }
+
+    tr.proxima td {
+        border-left: 3px solid var(--stamp);
+    }
+
+    tr.passada {
+        opacity: .55;
+    }
+
+    .pessoa {
+        font-weight: 650;
+    }
+
+    .badge-manual {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--diferido);
+        border: 1px solid var(--diferido);
+        border-radius: 20px;
+        padding: 1px 7px;
+        margin-left: 6px;
+        cursor: help;
+    }
+
+    td.acoes {
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    td.acoes button {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 7px;
+        padding: 4px 10px;
+        cursor: pointer;
+        margin-left: 5px;
+    }
+
+    td.acoes button:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
+
+    .form-inline {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 10px 4px;
+    }
+
+    .form-inline select,
+    .form-inline input[type="text"] {
+        border: 1px solid var(--rule-strong);
+        border-radius: 7px;
+        padding: 6px 8px;
+        font-size: 12.5px;
+    }
+
+    .btn {
+        border: 1px solid var(--stamp);
+        background: var(--stamp);
+        color: #fff;
+        border-radius: 7px;
+        padding: 5px 12px;
+        font-size: 12.5px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        opacity: .9;
+    }
+
+    .btn.secundario {
+        border-color: var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+    }
+
+    .pessoas-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .pessoa-linha {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13.5px;
+    }
+
+    .pessoa-linha .ordem {
+        color: var(--ink-faint);
+        font-family: var(--mono);
+        font-size: 11px;
+        margin-right: 8px;
+    }
+
+    .pessoa-linha.inativa {
+        opacity: .5;
+    }
+
+    label.switch {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        cursor: pointer;
+    }
+</style>
+
+<div class="wrap">
+    <a class="backnav" href="index.html">← Menu</a>
+    <p class="eyebrow">Suporte · Escala</p>
+    <h1>Escala de Sábados</h1>
+    <p class="sub">Rodízio fixo do plantão de sábado. Troque com um colega, reatribua um sábado específico, ou marque alguém como fora do rodízio temporariamente — a escala futura se ajusta sozinha.</p>
+
+    <div class="card">
+        <h2>Próximos sábados</h2>
+        <table>
+            <thead>
+                <tr><th>Sábado</th><th>Quem vai</th><th></th></tr>
+            </thead>
+            <tbody id="tbodyEscala"></tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Pessoas no rodízio</h2>
+        <div class="pessoas-lista" id="listaPessoas"></div>
+    </div>
+
+    <footer>escala compartilhada pela rede interna · LuxMenu</footer>
+</div>
+
+<script src="shared.js"></script>
+<script src="escala.js"></script>

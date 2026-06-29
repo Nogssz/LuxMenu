@@ -1,0 +1,238 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arquivos</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .pastacard {
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        padding: 16px;
+        background: var(--card);
+        cursor: pointer;
+        transition: border-color .15s;
+    }
+
+    .pastacard:hover {
+        border-color: var(--stamp);
+    }
+
+    .pastacard .picone {
+        font-size: 26px;
+        margin-bottom: 8px;
+    }
+
+    .pastacard h2 {
+        margin: 0 0 3px;
+        font-size: 14px;
+        font-weight: 650;
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--ink);
+    }
+
+    .pastacard .pcount {
+        font-size: 12px;
+        color: var(--ink-faint);
+    }
+
+    .novapasta {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .novapasta input {
+        flex: 1;
+        border: 1px solid var(--rule-strong);
+        border-radius: 9px;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .btn {
+        border: 1px solid var(--stamp);
+        background: var(--stamp);
+        color: #fff;
+        border-radius: 9px;
+        padding: 0 16px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        opacity: .9;
+    }
+
+    .btn.secundario {
+        border-color: var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+    }
+
+    .pastahead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .pastahead h2 {
+        margin: 0;
+        font-size: 18px;
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--ink);
+        font-weight: 650;
+    }
+
+    .uploadbox {
+        border: 1.5px dashed var(--rule-strong);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 18px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .uploadbox input[type="file"] {
+        flex: 1;
+        min-width: 200px;
+        font-size: 13px;
+    }
+
+    .progresso {
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        display: none;
+    }
+
+    .progresso.show {
+        display: block;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    td {
+        color: var(--ink);
+    }
+
+    th {
+        font-size: 11px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        font-weight: 600;
+    }
+
+    td.acoes {
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    td.acoes a, td.acoes button {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 7px;
+        padding: 4px 10px;
+        cursor: pointer;
+        text-decoration: none;
+        margin-left: 5px;
+    }
+
+    td.acoes a:hover, td.acoes button:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
+
+    td.acoes button.del:hover {
+        border-color: #9A3B22;
+        color: #9A3B22;
+    }
+
+    .empty {
+        text-align: center;
+        color: var(--ink-faint);
+        padding: 24px 0;
+        font-size: 13px;
+    }
+
+    .pastacard .pdel {
+        float: right;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--ink-faint);
+        background: none;
+        border: 0;
+        cursor: pointer;
+    }
+
+    .pastacard .pdel:hover {
+        color: #9A3B22;
+    }
+</style>
+
+<div class="wrap">
+    <a class="backnav" href="index.html">← Menu</a>
+    <p class="eyebrow">Suporte · Arquivos</p>
+    <h1>Arquivos</h1>
+    <p class="sub">Pastas com arquivos comuns (instaladores, modelos, etc.) prontos pra baixar e enviar.</p>
+
+    <div id="viewPastas">
+        <div class="grid" id="gridPastas"></div>
+        <div class="empty" id="emptyPastas" style="display:none">Nenhuma pasta criada ainda.</div>
+
+        <div class="novapasta">
+            <input id="novaPastaNome" placeholder="Nome da nova pasta (ex: Retaguarda)">
+            <button class="btn" id="btnNovaPasta">Criar pasta</button>
+        </div>
+    </div>
+
+    <div id="viewPasta" style="display:none">
+        <a class="backnav" href="#" id="voltarPastas">← Pastas</a>
+        <div class="pastahead">
+            <h2 id="pastaTitulo"></h2>
+            <button class="btn secundario" id="btnExcluirPasta">excluir pasta</button>
+        </div>
+
+        <div class="uploadbox">
+            <input type="file" id="inputArquivo">
+            <button class="btn" id="btnEnviar">Enviar arquivo</button>
+            <span class="progresso" id="progresso">enviando…</span>
+        </div>
+
+        <table>
+            <thead>
+                <tr><th>Arquivo</th><th>Tamanho</th><th>Adicionado em</th><th></th></tr>
+            </thead>
+            <tbody id="tbodyArquivos"></tbody>
+        </table>
+        <div class="empty" id="emptyArquivos" style="display:none">Nenhum arquivo nessa pasta ainda.</div>
+    </div>
+
+    <footer>arquivos guardados no servidor local · LuxMenu</footer>
+</div>
+
+<script src="shared.js"></script>
+<script src="arquivos.js"></script>

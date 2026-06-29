@@ -1,0 +1,515 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de Diferimento de ICMS</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px
+    }
+
+    @media(max-width:620px) {
+        .grid {
+            grid-template-columns: 1fr
+        }
+    }
+
+    /* inputs */
+    .field {
+        margin-bottom: 16px
+    }
+
+    .field:last-child {
+        margin-bottom: 0
+    }
+
+    label {
+        display: block;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        margin-bottom: 6px;
+        font-weight: 500
+    }
+
+    .ibox {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--rule-strong);
+        border-radius: 9px;
+        background: var(--card);
+        overflow: hidden;
+        transition: border-color .15s, box-shadow .15s
+    }
+
+    .ibox:focus-within {
+        border-color: var(--stamp);
+        box-shadow: 0 0 0 3px rgba(35, 70, 83, .12)
+    }
+
+    .ibox .pre,
+    .ibox .suf {
+        padding: 0 11px;
+        color: var(--ink-faint);
+        font-size: 14px;
+        font-family: var(--mono);
+        user-select: none;
+        background: var(--rule)
+    }
+
+    .ibox .pre {
+        border-right: 1px solid var(--rule)
+    }
+
+    .ibox .suf {
+        border-left: 1px solid var(--rule)
+    }
+
+    input {
+        border: 0;
+        outline: 0;
+        background: transparent;
+        width: 100%;
+        padding: 11px 12px;
+        font-family: var(--mono);
+        font-size: 16px;
+        color: var(--ink);
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .presets {
+        display: flex;
+        gap: 6px;
+        margin-top: 9px;
+        flex-wrap: wrap
+    }
+
+    .chip {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 20px;
+        padding: 3px 10px;
+        cursor: pointer;
+        transition: all .12s
+    }
+
+    .chip:hover {
+        border-color: var(--stamp);
+        color: var(--stamp)
+    }
+
+    /* stamp / hero */
+    .stampcard {
+        display: flex;
+        align-items: center;
+        gap: 18px
+    }
+
+    .stamp {
+        flex: 0 0 auto;
+        width: 118px;
+        height: 118px;
+        border: 2.5px solid var(--stamp);
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--stamp);
+        transform: rotate(-7deg);
+        position: relative;
+    }
+
+    .stamp::after {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border: 1px solid var(--stamp);
+        border-radius: 50%;
+        opacity: .5
+    }
+
+    .stamp .lab {
+        font-size: 9px;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        font-weight: 600;
+        opacity: .85
+    }
+
+    .stamp .val {
+        font-family: var(--mono);
+        font-size: 30px;
+        font-weight: 650;
+        line-height: 1;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums
+    }
+
+    .stamp .pct {
+        font-size: 14px
+    }
+
+    .stampcard .gloss {
+        font-size: 13px;
+        color: var(--ink-soft)
+    }
+
+    .stampcard .gloss b {
+        color: var(--ink);
+        font-weight: 600
+    }
+
+    /* results table */
+    .res {
+        margin-top: 6px
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 14px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--rule)
+    }
+
+    .row:last-child {
+        border-bottom: 0
+    }
+
+    .row .k {
+        font-size: 13px;
+        color: var(--ink-soft)
+    }
+
+    .row .k small {
+        display: block;
+        font-size: 11px;
+        color: var(--ink-faint);
+        font-family: var(--mono)
+    }
+
+    .row .v {
+        font-family: var(--mono);
+        font-size: 16px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap
+    }
+
+    .row.hl {
+        background: var(--recolher-bg);
+        margin: 0 -20px;
+        padding: 14px 20px;
+        border-bottom: 0;
+        border-radius: 8px
+    }
+
+    .row.hl .k {
+        color: var(--recolher);
+        font-weight: 600
+    }
+
+    .row.hl .v {
+        color: var(--recolher);
+        font-weight: 650;
+        font-size: 18px
+    }
+
+    .row.dif .v {
+        color: var(--diferido)
+    }
+
+    /* nfe */
+    .nfe {
+        margin-top: 18px
+    }
+
+    .nfe .head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px
+    }
+
+    .nfe h2 {
+        margin: 0
+    }
+
+    .copy {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 7px;
+        padding: 5px 11px;
+        cursor: pointer;
+        transition: all .12s
+    }
+
+    .copy:hover {
+        border-color: var(--stamp);
+        color: var(--stamp)
+    }
+
+    .copy.ok {
+        border-color: var(--recolher);
+        color: var(--recolher)
+    }
+
+    .fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: var(--rule);
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        overflow: hidden
+    }
+
+    @media(max-width:520px) {
+        .fields {
+            grid-template-columns: 1fr
+        }
+    }
+
+    .fcell {
+        background: var(--card);
+        padding: 11px 14px
+    }
+
+    .fcell .tag {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--ink-faint);
+        letter-spacing: .04em
+    }
+
+    .fcell .fv {
+        font-family: var(--mono);
+        font-size: 15px;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums
+    }
+
+    .note {
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        margin-top: 18px;
+        line-height: 1.55
+    }
+
+    .note code {
+        font-family: var(--mono);
+        font-size: 12px;
+        background: var(--rule);
+        padding: 1px 5px;
+        border-radius: 4px
+    }
+
+    .warn {
+        background: #FBEBE7;
+        border: 1px solid #E9C4BA;
+        color: #9A3B22;
+        border-radius: 9px;
+        padding: 10px 13px;
+        font-size: 13px;
+        margin-top: 14px;
+        display: none
+    }
+
+    .warn.show {
+        display: block
+    }
+</style>
+
+<div class="wrap">
+    <a class="backnav" href="index.html">← Menu</a>
+    <p class="eyebrow">Fiscal · ICMS · CST 51</p>
+    <h1>Diferimento parcial de ICMS</h1>
+    <p class="sub">A operação é tributada à alíquota cheia, mas parte do imposto é diferida e a carga destacada cai para
+        a alíquota efetiva. Informe o valor e as alíquotas.</p>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Entrada</h2>
+            <div class="field">
+                <label for="valor">Valor da operação</label>
+                <div class="ibox"><span class="pre">R$</span><input id="valor" inputmode="decimal" value="1.000,00">
+                </div>
+            </div>
+            <div class="field">
+                <label for="aliqOp">Alíquota da operação (cheia)</label>
+                <div class="ibox"><input id="aliqOp" inputmode="decimal" value="17"><span class="suf">%</span></div>
+                <div class="presets" data-target="aliqOp">
+                    <span class="chip">17</span><span class="chip">18</span><span class="chip">12</span><span
+                        class="chip">25</span>
+                </div>
+            </div>
+            <div class="field">
+                <label for="aliqDif">Alíquota efetiva no diferimento</label>
+                <div class="ibox"><input id="aliqDif" inputmode="decimal" value="12"><span class="suf">%</span></div>
+                <div class="presets" data-target="aliqDif">
+                    <span class="chip">12</span><span class="chip">7</span><span class="chip">4</span><span
+                        class="chip">10</span>
+                </div>
+            </div>
+            <div class="warn" id="warn"></div>
+        </div>
+
+        <div class="card">
+            <h2>Resultado</h2>
+            <div class="stampcard">
+                <div class="stamp">
+                    <span class="lab">Diferimento</span>
+                    <span class="val"><span id="pdif">29,41</span><span class="pct">%</span></span>
+                </div>
+                <div class="gloss">Da alíquota de <b id="g-op">17%</b> para a carga efetiva de <b id="g-dif">12%</b>,
+                    difere-se <b id="g-pdif">29,41%</b> do imposto da operação.</div>
+            </div>
+            <div class="res">
+                <div class="row"><span class="k">ICMS da operação<small>sem diferimento</small></span><span class="v"
+                        id="r-op">R$ 170,00</span></div>
+                <div class="row dif"><span class="k">ICMS diferido<small>recolhido na etapa seguinte</small></span><span
+                        class="v" id="r-dif">R$ 50,00</span></div>
+                <div class="row"><span class="k">Base de cálculo reduzida<small>equivalente</small></span><span
+                        class="v" id="r-base">R$ 705,88</span></div>
+                <div class="row hl"><span class="k">ICMS a recolher (destacado)</span><span class="v" id="r-rec">R$
+                        120,00</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card nfe">
+        <div class="head">
+            <h2>Campos para a NF-e</h2>
+            <button class="copy" id="copy">copiar campos</button>
+        </div>
+        <div class="fields">
+            <div class="fcell">
+                <div class="tag">vBC · base de cálculo</div>
+                <div class="fv" id="f-vbc">1.000,00</div>
+            </div>
+            <div class="fcell">
+                <div class="tag">pICMS · alíquota</div>
+                <div class="fv" id="f-picms">17,00</div>
+            </div>
+            <div class="fcell">
+                <div class="tag">vICMSOp · ICMS da operação</div>
+                <div class="fv" id="f-op">170,00</div>
+            </div>
+            <div class="fcell">
+                <div class="tag">pDif · % do diferimento</div>
+                <div class="fv" id="f-pdif">29,4118</div>
+            </div>
+            <div class="fcell">
+                <div class="tag">vICMSDif · ICMS diferido</div>
+                <div class="fv" id="f-dif">50,00</div>
+            </div>
+            <div class="fcell">
+                <div class="tag">vICMS · ICMS a recolher</div>
+                <div class="fv" id="f-rec">120,00</div>
+            </div>
+        </div>
+        <p class="note">
+            Pela redução de base equivalente: <code>pRedBC = pDif</code>, com base reduzida de
+            <span id="n-base">R$ 705,88</span> tributada a <span id="n-op">17%</span>, chegando ao mesmo
+            <code>vICMS</code>. A fórmula do percentual é <code>pDif = (1 − efetiva ÷ cheia) × 100</code>.
+        </p>
+    </div>
+
+    <footer>cálculo local · nada é enviado · diferimento parcial CST 51</footer>
+</div>
+
+<script src="shared.js"></script>
+<script>
+    const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    const fmtNum = (n, d = 2) => n.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    function parseBR(str) {
+        if (typeof str !== 'string') str = String(str ?? '');
+        str = str.trim().replace(/[R$\s]/g, '');
+        if (str.includes(',')) str = str.replace(/\./g, '').replace(',', '.');
+        const n = parseFloat(str);
+        return isNaN(n) ? 0 : n;
+    }
+
+    const $ = id => document.getElementById(id);
+    const valorEl = $('valor'), opEl = $('aliqOp'), difEl = $('aliqDif'), warn = $('warn');
+
+    function calc() {
+        const V = parseBR(valorEl.value);
+        const ro = parseBR(opEl.value);
+        const rd = parseBR(difEl.value);
+
+        warn.classList.remove('show');
+        if (ro <= 0) { warn.textContent = 'Informe uma alíquota da operação maior que zero.'; warn.classList.add('show'); }
+        else if (rd > ro) { warn.textContent = 'A alíquota efetiva não pode ser maior que a alíquota cheia — não haveria diferimento.'; warn.classList.add('show'); }
+
+        const safeRo = ro > 0 ? ro : 1;
+        const icmsOp = V * ro / 100;
+        const icmsRec = V * rd / 100;
+        const icmsDif = icmsOp - icmsRec;
+        const pDif = (1 - rd / safeRo) * 100;
+        const baseRed = V * (rd / safeRo);
+
+        // hero
+        $('pdif').textContent = fmtNum(pDif);
+        $('g-op').textContent = fmtNum(ro) + '%';
+        $('g-dif').textContent = fmtNum(rd) + '%';
+        $('g-pdif').textContent = fmtNum(pDif) + '%';
+        // results
+        $('r-op').textContent = fmtBRL.format(icmsOp);
+        $('r-dif').textContent = fmtBRL.format(icmsDif);
+        $('r-base').textContent = fmtBRL.format(baseRed);
+        $('r-rec').textContent = fmtBRL.format(icmsRec);
+        // nfe
+        $('f-vbc').textContent = fmtNum(V);
+        $('f-picms').textContent = fmtNum(ro);
+        $('f-op').textContent = fmtNum(icmsOp);
+        $('f-pdif').textContent = fmtNum(pDif, 4);
+        $('f-dif').textContent = fmtNum(icmsDif);
+        $('f-rec').textContent = fmtNum(icmsRec);
+        // note
+        $('n-base').textContent = fmtBRL.format(baseRed);
+        $('n-op').textContent = fmtNum(ro) + '%';
+
+        return { V, ro, rd, icmsOp, icmsRec, icmsDif, pDif, baseRed };
+    }
+
+    [valorEl, opEl, difEl].forEach(el => el.addEventListener('input', calc));
+
+    document.querySelectorAll('.presets').forEach(p => {
+        const target = $(p.dataset.target);
+        p.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+            target.value = c.textContent; calc();
+        }));
+    });
+
+    // format the value field nicely on blur
+    valorEl.addEventListener('blur', () => { valorEl.value = fmtNum(parseBR(valorEl.value)); });
+
+    $('copy').addEventListener('click', () => {
+        const r = calc();
+        const txt =
+            `vBC=${fmtNum(r.V)}
+pICMS=${fmtNum(r.ro)}
+vICMSOp=${fmtNum(r.icmsOp)}
+pDif=${fmtNum(r.pDif, 4)}
+vICMSDif=${fmtNum(r.icmsDif)}
+vICMS=${fmtNum(r.icmsRec)}`;
+        copiarTexto(txt).then((ok) => {
+            const b = $('copy');
+            b.textContent = ok ? 'copiado ✓' : 'não copiou';
+            if (ok) b.classList.add('ok');
+            setTimeout(() => { b.textContent = 'copiar campos'; b.classList.remove('ok'); }, 1600);
+        });
+    });
+
+    calc();
+</script>

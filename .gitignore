@@ -1,0 +1,7 @@
+node_modules/
+data/
+*.log
+.env
+
+# dados reais de clientes (CNPJ, contato, etc.) - nunca versionar
+server/seed/DB_CLIENTES.csv
