@@ -2,7 +2,11 @@ const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const dataDir = path.join(__dirname, '..', 'data');
+// DATA_DIR permite apontar pra uma pasta de dados diferente (ex.: ambiente de teste),
+// sem precisar tocar no resto do código. Sem essa variável, usa a pasta de produção.
+const dataDir = process.env.DATA_DIR
+    ? path.resolve(process.env.DATA_DIR)
+    : path.join(__dirname, '..', 'data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
 const db = new Database(path.join(dataDir, 'luxmenu.sqlite'));
@@ -21,4 +25,5 @@ for (const arquivo of arquivos) {
     registrarMigracao.run(arquivo, new Date().toISOString());
 }
 
+db.dataDir = dataDir;
 module.exports = db;

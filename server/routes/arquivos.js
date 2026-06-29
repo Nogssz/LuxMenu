@@ -6,7 +6,7 @@ const multer = require('multer');
 const db = require('../db');
 
 const router = express.Router();
-const ARQUIVOS_DIR = path.join(__dirname, '..', '..', 'data', 'arquivos');
+const ARQUIVOS_DIR = path.join(db.dataDir, 'arquivos');
 if (!fs.existsSync(ARQUIVOS_DIR)) fs.mkdirSync(ARQUIVOS_DIR, { recursive: true });
 
 const storage = multer.diskStorage({

@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node server/server.js",
+    "start:teste": "node server/iniciar-teste.js",
+    "clonar-teste": "node server/scripts/clonar-para-teste.js",
     "import": "node server/seed/import_clientes.js",
     "import-videos": "node server/seed/import_videos.js",
     "test": "echo \"Error: no test specified\" && exit 1"

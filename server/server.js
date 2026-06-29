@@ -1,7 +1,7 @@
 const path = require('path');
 const express = require('express');
 
-require('./db'); // garante que o banco e as tabelas existem antes de subir o servidor
+const db = require('./db'); // garante que o banco e as tabelas existem antes de subir o servidor
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,4 +23,5 @@ app.use('/api/agenda', require('./routes/agenda'));
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`LuxMenu rodando em http://localhost:${PORT}`);
+    console.log(`Dados em: ${db.dataDir}`);
 });
