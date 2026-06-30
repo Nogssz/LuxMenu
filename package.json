@@ -9,6 +9,7 @@
     "clonar-teste": "node server/scripts/clonar-para-teste.js",
     "import": "node server/seed/import_clientes.js",
     "import-videos": "node server/seed/import_videos.js",
+    "export-videos": "node server/seed/export_videos_estaticos.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
