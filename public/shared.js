@@ -67,3 +67,69 @@ async function copiarTexto(texto) {
     if (document.body) criarToggle();
     else document.addEventListener('DOMContentLoaded', criarToggle);
 })();
+
+// Menu lateral retrátil, igual em todas as páginas, pra trocar de módulo sem
+// precisar voltar pro index.html primeiro. Não aparece no próprio index.html
+// porque lá a lista de módulos já está na tela.
+(function () {
+    const MODULOS = [
+        { href: 'index.html', icone: '🏠', titulo: 'Menu de módulos' },
+        { href: 'Diferimento.html', icone: '%', titulo: 'Diferimento de ICMS' },
+        { href: 'fechamento.html', icone: '✓', titulo: 'Fechamento de Mês' },
+        { href: 'consulta-cnpj.html', icone: '🔎', titulo: 'Consulta CNPJ' },
+        { href: 'videos.html', icone: '▶', titulo: 'Vídeos Tutoriais' },
+        { href: 'arquivos.html', icone: '📁', titulo: 'Arquivos' },
+        { href: 'escala.html', icone: '📅', titulo: 'Escala de Sábados' },
+        { href: 'agenda.html', icone: '📆', titulo: 'Agenda' },
+    ];
+
+    function paginaAtual() {
+        const partes = location.pathname.split('/');
+        return partes[partes.length - 1] || 'index.html';
+    }
+
+    function criarMenuLateral() {
+        const atual = paginaAtual();
+        if (atual === 'index.html' || atual === '') return;
+        if (document.getElementById('menuLateral')) return;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'menuLateralOverlay';
+
+        const painel = document.createElement('nav');
+        painel.id = 'menuLateral';
+        painel.innerHTML = `<p class="ml-titulo">Módulos</p>` + MODULOS.map(m =>
+            `<a class="ml-item${m.href === atual ? ' ativo' : ''}" href="${m.href}"><span class="ml-icone">${m.icone}</span>${m.titulo}</a>`
+        ).join('');
+
+        const btn = document.createElement('button');
+        btn.id = 'menuLateralToggle';
+        btn.type = 'button';
+        btn.title = 'Trocar de módulo';
+        btn.innerHTML = '☰';
+
+        function abrir() {
+            painel.classList.add('aberto');
+            overlay.classList.add('show');
+            btn.classList.add('aberto');
+        }
+        function fechar() {
+            painel.classList.remove('aberto');
+            overlay.classList.remove('show');
+            btn.classList.remove('aberto');
+        }
+
+        btn.addEventListener('click', () => {
+            painel.classList.contains('aberto') ? fechar() : abrir();
+        });
+        overlay.addEventListener('click', fechar);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fechar(); });
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(painel);
+        document.body.appendChild(btn);
+    }
+
+    if (document.body) criarMenuLateral();
+    else document.addEventListener('DOMContentLoaded', criarMenuLateral);
+})();
