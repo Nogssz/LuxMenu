@@ -3,22 +3,42 @@ const db = require('../db');
 
 const router = express.Router();
 
+function buildFtsQuery(termo) {
+    // Transforma cada palavra em prefixo (ex: "nota comp" → "nota* comp*")
+    // pra funcionar durante a digitação, e remove caracteres especiais do FTS5.
+    return termo.trim()
+        .split(/\s+/)
+        .map(w => w.replace(/["'*:^()]/g, '').trim())
+        .filter(Boolean)
+        .map(w => w + '*')
+        .join(' ');
+}
+
 router.get('/', (req, res) => {
     const { busca, categoria_id } = req.query;
+
+    if (busca && busca.trim()) {
+        const ftsQuery = buildFtsQuery(busca);
+        try {
+            let sql = `SELECT v.*, c.nome AS categoria_nome
+                       FROM videos_fts fts
+                       JOIN videos v ON v.id = fts.rowid
+                       LEFT JOIN categorias_video c ON c.id = v.categoria_id
+                       WHERE videos_fts MATCH ?`;
+            const params = [ftsQuery];
+            if (categoria_id) { sql += ' AND v.categoria_id = ?'; params.push(categoria_id); }
+            sql += ' ORDER BY rank';
+            return res.json(db.prepare(sql).all(...params));
+        } catch {
+            // fallback pra LIKE se a query FTS for inválida
+        }
+    }
+
     let sql = `SELECT v.*, c.nome AS categoria_nome FROM videos v
                LEFT JOIN categorias_video c ON c.id = v.categoria_id`;
-    const condicoes = [];
     const params = [];
-
-    if (busca) {
-        condicoes.push('(v.titulo LIKE ? OR v.tags LIKE ? OR v.descricao LIKE ?)');
-        const termo = `%${busca}%`;
-        params.push(termo, termo, termo);
-    }
-    if (categoria_id) { condicoes.push('v.categoria_id = ?'); params.push(categoria_id); }
-    if (condicoes.length) sql += ' WHERE ' + condicoes.join(' AND ');
+    if (categoria_id) { sql += ' WHERE v.categoria_id = ?'; params.push(categoria_id); }
     sql += ' ORDER BY v.titulo';
-
     res.json(db.prepare(sql).all(...params));
 });
 

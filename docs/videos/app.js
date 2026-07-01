@@ -1,3 +1,5 @@
+import Fuse from 'https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.min.mjs';
+
 const $ = (id) => document.getElementById(id);
 
 function escapeHtml(str) {
@@ -57,6 +59,22 @@ function cardHtml(v) {
 
 let todosVideos = [];
 let categoriaFiltro = '';
+let fuseIndex = null;
+
+function construirFuse() {
+    fuseIndex = new Fuse(todosVideos, {
+        keys: [
+            { name: 'titulo', weight: 3 },
+            { name: 'tags', weight: 2 },
+            { name: 'categoria_nome', weight: 1 },
+            { name: 'descricao', weight: 0.5 },
+        ],
+        threshold: 0.35,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+        shouldSort: true,
+    });
+}
 
 function categoriasUnicas() {
     const nomes = [...new Set(todosVideos.map(v => v.categoria_nome).filter(Boolean))];
@@ -69,15 +87,38 @@ function renderCatchips() {
         .join('');
 }
 
-function renderLista() {
-    const busca = $('busca').value.trim().toLowerCase();
+function buscarFuse(busca) {
+    let resultados = fuseIndex.search(busca).map(r => r.item);
+    const palavras = busca.split(/\s+/).filter(p => p.length >= 3);
+    if (resultados.length < 2 && palavras.length > 1) {
+        const pontos = new Map();
+        for (const p of palavras) {
+            for (const { item } of fuseIndex.search(p)) {
+                pontos.set(item.id, (pontos.get(item.id) || 0) + 1);
+            }
+        }
+        const porId = Object.fromEntries(todosVideos.map(v => [v.id, v]));
+        resultados = [...pontos.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(([id]) => porId[id])
+            .filter(Boolean);
+    }
+    return resultados;
+}
 
-    const filtrados = todosVideos.filter(v => {
-        if (categoriaFiltro && v.categoria_nome !== categoriaFiltro) return false;
-        if (!busca) return true;
-        const alvo = `${v.titulo} ${v.tags || ''} ${v.descricao || ''}`.toLowerCase();
-        return alvo.includes(busca);
-    });
+function renderLista() {
+    const busca = $('busca').value.trim();
+    let filtrados;
+
+    if (busca.length >= 2 && fuseIndex) {
+        filtrados = buscarFuse(busca);
+    } else {
+        filtrados = [...todosVideos];
+    }
+
+    if (categoriaFiltro) {
+        filtrados = filtrados.filter(v => v.categoria_nome === categoriaFiltro);
+    }
 
     const lista = $('lista');
     const empty = $('empty');
@@ -117,6 +158,7 @@ $('busca').addEventListener('input', () => {
 (async function init() {
     const res = await fetch('videos.json');
     todosVideos = await res.json();
+    construirFuse();
     renderCatchips();
     renderLista();
 })();

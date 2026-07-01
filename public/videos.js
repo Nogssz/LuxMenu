@@ -1,3 +1,5 @@
+import Fuse from './fuse.min.mjs';
+
 const $ = (id) => document.getElementById(id);
 
 function escapeHtml(str) {
@@ -73,9 +75,74 @@ function cardHtml(v) {
         </div>`;
 }
 
-let cacheVideos = [];
+let todosVideos = [];
 let categorias = [];
 let categoriaFiltro = '';
+let fuseIndex = null;
+
+function construirFuse() {
+    fuseIndex = new Fuse(todosVideos, {
+        keys: [
+            { name: 'titulo', weight: 3 },
+            { name: 'tags', weight: 2 },
+            { name: 'categoria_nome', weight: 1 },
+            { name: 'descricao', weight: 0.5 },
+        ],
+        threshold: 0.35,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+        shouldSort: true,
+    });
+}
+
+function buscarFuse(busca) {
+    let resultados = fuseIndex.search(busca).map(r => r.item);
+    const palavras = busca.split(/\s+/).filter(p => p.length >= 3);
+    if (resultados.length < 2 && palavras.length > 1) {
+        // Pontua cada vídeo pelo número de palavras que ele acerta; mais palavras = aparece primeiro
+        const pontos = new Map();
+        for (const p of palavras) {
+            for (const { item } of fuseIndex.search(p)) {
+                pontos.set(item.id, (pontos.get(item.id) || 0) + 1);
+            }
+        }
+        const porId = Object.fromEntries(todosVideos.map(v => [v.id, v]));
+        resultados = [...pontos.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(([id]) => porId[id])
+            .filter(Boolean);
+    }
+    return resultados;
+}
+
+function renderFiltrado() {
+    const busca = $('busca').value.trim();
+    let resultados;
+
+    if (busca.length >= 2 && fuseIndex) {
+        resultados = buscarFuse(busca);
+    } else {
+        resultados = [...todosVideos];
+    }
+
+    if (categoriaFiltro) {
+        resultados = resultados.filter(v => String(v.categoria_id) === categoriaFiltro);
+    }
+
+    if (!resultados.length) {
+        $('lista').innerHTML = '';
+        $('empty').style.display = 'block';
+    } else {
+        $('empty').style.display = 'none';
+        $('lista').innerHTML = resultados.map(cardHtml).join('');
+    }
+}
+
+async function carregarTodos() {
+    todosVideos = await api('/api/videos');
+    construirFuse();
+    renderFiltrado();
+}
 
 async function carregarCategorias() {
     categorias = await api('/api/categorias-video');
@@ -88,24 +155,6 @@ async function carregarCategorias() {
         categorias.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
 }
 
-async function carregar() {
-    const busca = $('busca').value.trim();
-    const params = new URLSearchParams();
-    if (busca) params.set('busca', busca);
-    if (categoriaFiltro) params.set('categoria_id', categoriaFiltro);
-
-    cacheVideos = await api(`/api/videos?${params.toString()}`);
-    const lista = $('lista');
-    const empty = $('empty');
-    if (!cacheVideos.length) {
-        lista.innerHTML = '';
-        empty.style.display = 'block';
-    } else {
-        empty.style.display = 'none';
-        lista.innerHTML = cacheVideos.map(cardHtml).join('');
-    }
-}
-
 function resetForm() {
     $('videoId').value = '';
     $('vTitulo').value = '';
@@ -115,18 +164,6 @@ function resetForm() {
     $('vCategoria').value = '';
     $('formTitulo').textContent = 'Novo vídeo';
     $('btnCancelar').style.display = 'none';
-}
-
-function preencherForm(video) {
-    $('videoId').value = video.id;
-    $('vTitulo').value = video.titulo;
-    $('vUrl').value = video.url;
-    $('vTags').value = video.tags || '';
-    $('vDescricao').value = video.descricao || '';
-    $('vCategoria').value = video.categoria_id || '';
-    $('formTitulo').textContent = `Editando: ${video.titulo}`;
-    $('btnCancelar').style.display = '';
-    $('admin').classList.add('show');
 }
 
 $('toggleAdmin').addEventListener('click', () => {
@@ -158,17 +195,12 @@ $('btnSalvar').addEventListener('click', async () => {
         descricao: $('vDescricao').value.trim(),
         categoria_id: $('vCategoria').value || null,
     };
-    const id = $('videoId').value;
-
     try {
-        if (id) await api(`/api/videos/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
-        else await api('/api/videos', { method: 'POST', body: JSON.stringify(payload) });
+        await api('/api/videos', { method: 'POST', body: JSON.stringify(payload) });
         resetForm();
         $('admin').classList.remove('show');
-        carregar();
-    } catch (e) {
-        alert(e.message);
-    }
+        await carregarTodos();
+    } catch (e) { alert(e.message); }
 });
 
 $('lista').addEventListener('click', async (e) => {
@@ -188,7 +220,7 @@ $('lista').addEventListener('click', async (e) => {
 
     if (editBtn) {
         const id = Number(editBtn.dataset.id);
-        const video = cacheVideos.find(v => v.id === id);
+        const video = todosVideos.find(v => v.id === id);
         if (!video) return;
         const card = $('lista').querySelector(`.vcard[data-id="${id}"]`);
         if (card) { card.innerHTML = cardEditHtml(video); card.classList.add('editando'); }
@@ -212,8 +244,8 @@ $('lista').addEventListener('click', async (e) => {
             const updated = await api(`/api/videos/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
             const cat = categorias.find(c => String(c.id) === String(payload.categoria_id));
             const novoVideo = { ...updated, categoria_nome: cat?.nome || null };
-            const idx = cacheVideos.findIndex(v => v.id === id);
-            if (idx !== -1) cacheVideos[idx] = novoVideo;
+            const idx = todosVideos.findIndex(v => v.id === id);
+            if (idx !== -1) { todosVideos[idx] = novoVideo; construirFuse(); }
             card.outerHTML = cardHtml(novoVideo);
         } catch (err) { alert(err.message); }
         return;
@@ -221,7 +253,7 @@ $('lista').addEventListener('click', async (e) => {
 
     if (cancelarBtn) {
         const id = Number(cancelarBtn.dataset.id);
-        const video = cacheVideos.find(v => v.id === id);
+        const video = todosVideos.find(v => v.id === id);
         const card = $('lista').querySelector(`.vcard[data-id="${id}"]`);
         if (video && card) card.outerHTML = cardHtml(video);
         return;
@@ -230,7 +262,7 @@ $('lista').addEventListener('click', async (e) => {
     if (delBtn) {
         if (!confirm('Excluir esse vídeo da lista?')) return;
         await api(`/api/videos/${delBtn.dataset.id}`, { method: 'DELETE' });
-        carregar();
+        await carregarTodos();
     }
 });
 
@@ -240,16 +272,16 @@ $('catchips').addEventListener('click', (e) => {
     $('catchips').querySelectorAll('.catchip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     categoriaFiltro = btn.dataset.id;
-    carregar();
+    renderFiltrado();
 });
 
 let debounce;
 $('busca').addEventListener('input', () => {
     clearTimeout(debounce);
-    debounce = setTimeout(carregar, 250);
+    debounce = setTimeout(renderFiltrado, 150);
 });
 
 (async function init() {
     await carregarCategorias();
-    await carregar();
+    await carregarTodos();
 })();
