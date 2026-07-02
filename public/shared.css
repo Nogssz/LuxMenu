@@ -269,3 +269,36 @@ footer {
     width: 22px;
     text-align: center;
 }
+
+/* Barra de usuário logado — fica entre o temaToggle (right:14px) e o conteúdo */
+#barraUsuario {
+    position: fixed;
+    top: 18px;
+    right: 116px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 1000;
+}
+
+#barraUsuario .bu-nome {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-weight: 600;
+}
+
+#barraUsuario .bu-sair {
+    border: 1px solid var(--rule-strong);
+    background: var(--card);
+    color: var(--ink-faint);
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+}
+
+#barraUsuario .bu-sair:hover {
+    border-color: #9A3B22;
+    color: #9A3B22;
+}

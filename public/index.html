@@ -150,9 +150,30 @@
                 <p>Compromissos com horário marcado e tarefas da equipe, num calendário compartilhado.</p>
             </span>
         </a>
+
+        <a class="modcard" href="chat.html">
+            <span class="modicon">💬</span>
+            <span class="modbody">
+                <h2>Chat da equipe</h2>
+                <p>Mensagens internas em tempo real entre os membros da equipe, com histórico.</p>
+            </span>
+        </a>
+
+        <a class="modcard" href="admin-usuarios.html" id="cardAdmin" style="display:none">
+            <span class="modicon">👤</span>
+            <span class="modbody">
+                <h2>Usuários</h2>
+                <p>Adicione, desative ou redefina senhas dos membros da equipe.</p>
+            </span>
+        </a>
     </div>
 
     <footer>menu local · dados compartilhados pela rede interna</footer>
 </div>
 
 <script src="shared.js"></script>
+<script>
+fetch('/api/auth/me').then(r => r.json()).then(u => {
+    if (u.role === 'admin') document.getElementById('cardAdmin').style.display = '';
+}).catch(() => {});
+</script>

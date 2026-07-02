@@ -48,7 +48,7 @@ router.put('/compromissos/:id', (req, res) => {
     if (!atual) return res.status(404).json({ error: 'compromisso não encontrado' });
 
     const titulo = req.body.titulo !== undefined ? req.body.titulo.trim() : atual.titulo;
-    const descricao = req.body.descricao !== undefined ? (req.body.descricao.trim() || null) : atual.descricao;
+    const descricao = req.body.descricao !== undefined ? (req.body.descricao && req.body.descricao.trim() ? req.body.descricao.trim() : null) : atual.descricao;
     const data = req.body.data !== undefined ? req.body.data : atual.data;
     const hora_inicio = req.body.hora_inicio !== undefined ? req.body.hora_inicio : atual.hora_inicio;
     const hora_fim = req.body.hora_fim !== undefined ? req.body.hora_fim : atual.hora_fim;
@@ -107,7 +107,7 @@ router.put('/tarefas/:id', (req, res) => {
     if (!atual) return res.status(404).json({ error: 'tarefa não encontrada' });
 
     const titulo = req.body.titulo !== undefined ? req.body.titulo.trim() : atual.titulo;
-    const descricao = req.body.descricao !== undefined ? (req.body.descricao.trim() || null) : atual.descricao;
+    const descricao = req.body.descricao !== undefined ? (req.body.descricao && req.body.descricao.trim() ? req.body.descricao.trim() : null) : atual.descricao;
     const data = req.body.data !== undefined ? (req.body.data || null) : atual.data;
     const hora = req.body.hora !== undefined ? (req.body.hora || null) : atual.hora;
     const pessoa_id = req.body.pessoa_id !== undefined ? (req.body.pessoa_id || null) : atual.pessoa_id;

@@ -81,6 +81,7 @@ async function copiarTexto(texto) {
         { href: 'arquivos.html', icone: '📁', titulo: 'Arquivos' },
         { href: 'escala.html', icone: '📅', titulo: 'Escala de Sábados' },
         { href: 'agenda.html', icone: '📆', titulo: 'Agenda' },
+        { href: 'chat.html', icone: '💬', titulo: 'Chat da equipe' },
     ];
 
     function paginaAtual() {
@@ -132,4 +133,31 @@ async function copiarTexto(texto) {
 
     if (document.body) criarMenuLateral();
     else document.addEventListener('DOMContentLoaded', criarMenuLateral);
+})();
+
+// Barra de usuário logado: mostra nome + botão de sair, fixo no topo direito
+// (ao lado do botão de tema, que fica em top:14px right:14px).
+(function () {
+    async function criarBarraUsuario() {
+        if (document.getElementById('barraUsuario')) return;
+        try {
+            const res = await fetch('/api/auth/me');
+            if (!res.ok) return;
+            const usuario = await res.json();
+
+            const barra = document.createElement('div');
+            barra.id = 'barraUsuario';
+            barra.innerHTML = `<span class="bu-nome">${usuario.nome.split(' ')[0]}</span><button class="bu-sair" title="Sair">↩</button>`;
+
+            barra.querySelector('.bu-sair').addEventListener('click', async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login.html';
+            });
+
+            document.body.appendChild(barra);
+        } catch { /* silencioso */ }
+    }
+
+    if (document.body) criarBarraUsuario();
+    else document.addEventListener('DOMContentLoaded', criarBarraUsuario);
 })();

@@ -3,8 +3,59 @@
 <title>Agenda</title>
 <link rel="stylesheet" href="shared.css">
 <style>
+    body {
+        padding-top: 6px;
+    }
+
     .wrap {
-        max-width: 1280px;
+        max-width: 1320px;
+        padding-bottom: 22px;
+    }
+
+    h1 {
+        margin-bottom: 6px;
+    }
+
+    .agenda-tabs {
+        position: fixed;
+        top: 18px;
+        right: 124px;
+        z-index: 999;
+        display: flex;
+        border: 1px solid var(--rule-strong);
+        border-radius: 9px;
+        overflow: hidden;
+        background: var(--card);
+    }
+
+    .agenda-tab {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        background: var(--card);
+        color: var(--ink-soft);
+        padding: 8px 14px;
+        font-size: 12.5px;
+        font-family: var(--sans);
+        cursor: pointer;
+    }
+
+    .agenda-tab + .agenda-tab {
+        border-left: 1px solid var(--rule-strong);
+    }
+
+    .agenda-tab .ic {
+        font-size: 14px;
+    }
+
+    .agenda-tab:hover {
+        color: var(--stamp);
+    }
+
+    .agenda-tab.active {
+        background: var(--stamp);
+        color: #fff;
     }
 
     .card + .card {
@@ -23,7 +74,7 @@
         text-transform: uppercase;
         color: var(--ink-faint);
         font-weight: 600;
-        margin: 0 0 14px;
+        margin: 0 0 8px;
     }
 
     .cal-header {
@@ -164,26 +215,60 @@
         display: block;
     }
 
+    .board-scroll-sync {
+        position: fixed;
+        left: 50%;
+        bottom: 0;
+        transform: translateX(-50%);
+        width: min(1320px, 100% - 36px);
+        overflow-x: auto;
+        overflow-y: hidden;
+        height: 16px;
+        padding-top: 2px;
+        background: var(--paper);
+        border-top: 1px solid var(--rule);
+        z-index: 500;
+        scrollbar-color: var(--rule-strong) var(--paper);
+    }
+
+    .board-scroll-sync #boardScrollSyncTrack {
+        height: 1px;
+    }
+
+    .board-scroll-sync::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    .board-scroll-sync::-webkit-scrollbar-track {
+        background: var(--paper);
+        border-radius: 8px;
+    }
+
+    .board-scroll-sync::-webkit-scrollbar-thumb {
+        background: var(--rule-strong);
+        border-radius: 8px;
+    }
+
+    .board-scroll-sync::-webkit-scrollbar-thumb:hover {
+        background: var(--stamp);
+    }
+
     .tarefas-board {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        display: flex;
+        align-items: flex-start;
         gap: 14px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scrollbar-width: none;
     }
 
-    @media(max-width: 900px) {
-        .tarefas-board {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    @media(max-width: 560px) {
-        .tarefas-board {
-            grid-template-columns: 1fr;
-        }
+    .tarefas-board::-webkit-scrollbar {
+        display: none;
     }
 
     .coluna-pessoa {
-        min-width: 0;
+        flex: 0 0 330px;
+        min-width: 330px;
         background: var(--paper);
         border: 1px solid var(--rule);
         border-radius: 10px;
@@ -209,10 +294,42 @@
         flex: 0 0 auto;
     }
 
+    .btn-add-tarefa {
+        border: 1px dashed var(--rule-strong);
+        background: none;
+        color: var(--ink-soft);
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-size: 13px;
+        font-family: var(--sans);
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .btn-add-tarefa:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
+
     .add-tarefa-rapida {
         display: flex;
         flex-direction: column;
         gap: 6px;
+    }
+
+    .add-tarefa-rapida[hidden] {
+        display: none;
+    }
+
+    .add-tarefa-acoes {
+        display: flex;
+        gap: 6px;
+    }
+
+    .add-tarefa-acoes button {
+        flex: 1;
+        padding: 7px;
+        font-size: 12.5px;
     }
 
     .add-tarefa-rapida .linha-data-hora {
@@ -247,18 +364,10 @@
         display: flex;
         flex-direction: column;
         gap: 3px;
-        max-height: 380px;
-        overflow-y: auto;
-        padding-right: 4px;
-        scrollbar-width: thin;
     }
 
     .coluna-concluidas-lista {
-        max-height: 220px;
-        overflow-y: auto;
-        padding-right: 4px;
         margin-top: 4px;
-        scrollbar-width: thin;
     }
 
     .item-compromisso {
@@ -293,8 +402,8 @@
     .tarefa-linha {
         display: flex;
         flex-direction: column;
-        gap: 5px;
-        padding: 7px 6px;
+        gap: 3px;
+        padding: 6px;
         font-size: 13.5px;
         border-radius: 7px;
     }
@@ -309,20 +418,68 @@
         gap: 8px;
     }
 
-    .tarefa-principal .tarefa-check {
-        margin-top: 3px;
+    .tarefa-check {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        margin: 2px 0 0;
+        border: 1.5px solid var(--rule-strong);
+        border-radius: 50%;
+        background: var(--card);
         flex: 0 0 auto;
+        cursor: pointer;
+        position: relative;
+        transition: background .15s, border-color .15s;
+    }
+
+    .tarefa-check:hover {
+        border-color: var(--stamp);
+    }
+
+    .tarefa-check:checked {
+        background: var(--recolher);
+        border-color: var(--recolher);
+    }
+
+    .tarefa-check:checked::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 1px;
+        width: 5px;
+        height: 9px;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .tarefa-textos {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        flex: 1;
+        min-width: 0;
     }
 
     .tarefa-linha .tit {
-        flex: 1;
-        min-width: 0;
+        font-weight: 600;
         white-space: normal;
         overflow-wrap: anywhere;
-        line-height: 1.35;
+        line-height: 1.3;
     }
 
-    .tarefa-linha.feita .tit {
+    .tarefa-desc {
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--ink-soft);
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.3;
+    }
+
+    .tarefa-linha.feita .tit,
+    .tarefa-linha.feita .tarefa-desc {
         color: var(--ink-faint);
         text-decoration: line-through;
     }
@@ -330,7 +487,7 @@
     .tarefa-meta {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
         flex-wrap: wrap;
         padding-left: 26px;
     }
@@ -340,29 +497,101 @@
         font-size: 11px;
         color: var(--ink-faint);
         white-space: nowrap;
+        margin-right: auto;
     }
 
-    .tarefa-pessoa {
-        border: 1px solid var(--rule-strong);
-        background: var(--card);
-        color: var(--ink-soft);
-        border-radius: 6px;
-        font-size: 11.5px;
-        padding: 3px 5px;
-        max-width: 120px;
-    }
-
-    .tarefa-del {
-        border: 0;
-        background: none;
-        color: var(--ink-faint);
-        cursor: pointer;
-        font-size: 16px;
-        padding: 0 4px;
+    .tarefa-menu {
+        position: relative;
         margin-left: auto;
     }
 
-    .tarefa-del:hover {
+    .tarefa-menu summary {
+        list-style: none;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        color: var(--ink-faint);
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .tarefa-menu summary::-webkit-details-marker,
+    .tarefa-menu summary::marker {
+        display: none;
+        content: "";
+    }
+
+    .tarefa-menu summary:hover {
+        background: var(--rule);
+        color: var(--ink-soft);
+    }
+
+    .tarefa-menu[open] summary {
+        background: var(--rule);
+        color: var(--stamp);
+    }
+
+    .tarefa-menu-painel {
+        position: absolute;
+        right: 0;
+        top: 26px;
+        background: var(--card);
+        border: 1px solid var(--rule-strong);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: 4px;
+        min-width: 140px;
+        z-index: 20;
+    }
+
+    .tarefa-menu-raiz,
+    .tarefa-menu-pessoas {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .tarefa-menu-raiz[hidden],
+    .tarefa-menu-pessoas[hidden] {
+        display: none;
+    }
+
+    .tarefa-menu-pessoas {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    .tarefa-menu-trocar,
+    .tarefa-menu-excluir,
+    .tarefa-menu-voltar,
+    .tarefa-mover-opcao {
+        border: 0;
+        background: none;
+        text-align: left;
+        padding: 6px 8px;
+        font-size: 12.5px;
+        color: var(--ink);
+        cursor: pointer;
+        border-radius: 5px;
+        font-family: var(--sans);
+    }
+
+    .tarefa-menu-voltar {
+        color: var(--ink-faint);
+        border-bottom: 1px solid var(--rule);
+        margin-bottom: 2px;
+        border-radius: 0;
+    }
+
+    .tarefa-menu-trocar:hover,
+    .tarefa-menu-excluir:hover,
+    .tarefa-mover-opcao:hover {
+        background: var(--rule);
+    }
+
+    .tarefa-menu-excluir {
         color: #9A3B22;
     }
 
@@ -438,16 +667,20 @@
 
 <div class="wrap">
     <a class="backnav" href="index.html">← Menu</a>
-    <p class="eyebrow">Suporte · Agenda</p>
     <h1>Agenda</h1>
-    <p class="sub">Tarefas da equipe, com data, horário e responsável — cada pessoa com sua coluna. Compromissos marcados no calendário com responsável também aparecem na coluna dela.</p>
 
-    <div class="card tarefas-board-card">
+    <div class="agenda-tabs" id="agendaTabs">
+        <button class="agenda-tab active" data-painel="painelTarefas"><span class="ic">✓</span>Tarefas</button>
+        <button class="agenda-tab" data-painel="painelCalendario"><span class="ic">📆</span>Calendário</button>
+    </div>
+
+    <div class="card tarefas-board-card" id="painelTarefas">
         <h2>Tarefas</h2>
+        <div class="board-scroll-sync" id="boardScrollSync"><div id="boardScrollSyncTrack"></div></div>
         <div class="tarefas-board" id="tarefasBoard"></div>
     </div>
 
-    <div class="card cal-card">
+    <div class="card cal-card" id="painelCalendario" style="display:none">
         <h2>Calendário</h2>
         <div class="cal-header">
             <button class="navbtn" id="btnSemanaAnterior" title="Semana anterior">←</button>
@@ -497,6 +730,43 @@
                 <button type="button" class="btn perigo" id="btnExcluirComp" style="display:none">Excluir</button>
                 <span class="espaco"></span>
                 <button type="button" class="btn secundario" id="btnCancelarComp">Cancelar</button>
+                <button type="submit" class="btn">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="overlay" id="overlayTarefa" style="display:none">
+    <div class="modal">
+        <h2>Editar tarefa</h2>
+        <form id="formTarefaEditar">
+            <input type="hidden" id="tarefaEditId">
+            <label for="tarefaEditTitulo">Título</label>
+            <input type="text" id="tarefaEditTitulo" required>
+
+            <label for="tarefaEditDescricao">Detalhes (opcional)</label>
+            <textarea id="tarefaEditDescricao" rows="2"></textarea>
+
+            <div class="linha2">
+                <div>
+                    <label for="tarefaEditData">Data (opcional)</label>
+                    <input type="date" id="tarefaEditData">
+                </div>
+                <div>
+                    <label for="tarefaEditHora">Horário (opcional)</label>
+                    <input type="time" id="tarefaEditHora">
+                </div>
+            </div>
+
+            <label for="tarefaEditPessoa">Responsável</label>
+            <select id="tarefaEditPessoa">
+                <option value="">Geral</option>
+            </select>
+
+            <div class="modal-acoes">
+                <button type="button" class="btn perigo" id="btnExcluirTarefaEdit">Excluir</button>
+                <span class="espaco"></span>
+                <button type="button" class="btn secundario" id="btnCancelarTarefaEdit">Cancelar</button>
                 <button type="submit" class="btn">Salvar</button>
             </div>
         </form>

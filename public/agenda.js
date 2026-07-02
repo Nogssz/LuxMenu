@@ -10,6 +10,33 @@ function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
+$('agendaTabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.agenda-tab');
+    if (!btn) return;
+    $('agendaTabs').querySelectorAll('.agenda-tab').forEach((b) => b.classList.toggle('active', b === btn));
+    $('painelTarefas').style.display = btn.dataset.painel === 'painelTarefas' ? '' : 'none';
+    $('painelCalendario').style.display = btn.dataset.painel === 'painelCalendario' ? '' : 'none';
+});
+
+// Barra de rolagem "fantasma" fixa perto do rodapé da tela, sincronizada com o quadro de
+// tarefas — assim dá pra navegar entre as colunas sem precisar rolar até o fim de uma
+// coluna comprida pra achar a barra de rolagem real.
+(function configurarScrollSync() {
+    const sync = $('boardScrollSync');
+    const board = $('tarefasBoard');
+    const trilha = $('boardScrollSyncTrack');
+
+    function atualizarLargura() {
+        trilha.style.width = `${board.scrollWidth}px`;
+    }
+
+    sync.addEventListener('scroll', () => { board.scrollLeft = sync.scrollLeft; });
+    board.addEventListener('scroll', () => { sync.scrollLeft = board.scrollLeft; });
+
+    new ResizeObserver(atualizarLargura).observe(board);
+    atualizarLargura();
+})();
+
 function paraISO(d) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
@@ -165,7 +192,8 @@ function renderGrid() {
 // (algo que o Google Agenda não faz — junta os dois tipos na mesma lista da pessoa).
 function renderQuadro() {
     const hoje = hojeISO();
-    const colunas = [{ id: null, nome: 'Geral' }, ...pessoas.filter((p) => p.ativo).map((p) => ({ id: p.id, nome: p.nome }))];
+    const pessoasOrdenadas = pessoas.filter((p) => p.ativo).sort((a, b) => a.ordem_agenda - b.ordem_agenda);
+    const colunas = [{ id: null, nome: 'Geral' }, ...pessoasOrdenadas.map((p) => ({ id: p.id, nome: p.nome }))];
 
     $('tarefasBoard').innerHTML = colunas.map((col) => {
         const tarefasCol = tarefas.filter((t) => (t.pessoa_id || null) === col.id);
@@ -186,11 +214,17 @@ function renderQuadro() {
 
         return `<div class="coluna-pessoa">
             <div class="coluna-head"><span class="dot" style="background:${col.id ? corPessoa(col.id) : 'var(--ink-faint)'}"></span>${escapeHtml(col.nome)}</div>
-            <form class="add-tarefa-rapida" data-pessoa="${col.id || ''}">
-                <input type="text" class="add-tarefa-input" placeholder="+ adicionar tarefa">
+            <button type="button" class="btn-add-tarefa" data-pessoa="${col.id || ''}">+ Adicionar tarefa</button>
+            <form class="add-tarefa-rapida" data-pessoa="${col.id || ''}" hidden>
+                <input type="text" class="add-tarefa-input" placeholder="título da tarefa">
+                <input type="text" class="add-tarefa-desc" placeholder="detalhes (opcional)">
                 <div class="linha-data-hora">
                     <input type="date" class="add-tarefa-data" title="data (opcional)">
                     <input type="time" class="add-tarefa-hora" title="horário (opcional)">
+                </div>
+                <div class="add-tarefa-acoes">
+                    <button type="submit" class="btn">Adicionar</button>
+                    <button type="button" class="btn secundario btn-cancelar-tarefa">Cancelar</button>
                 </div>
             </form>
             <div class="coluna-lista">
@@ -207,17 +241,75 @@ function renderQuadro() {
         });
     });
 
-    $('tarefasBoard').querySelectorAll('.tarefa-pessoa').forEach((sel) => {
-        sel.addEventListener('change', async () => {
-            await api(`/api/agenda/tarefas/${sel.dataset.id}`, { method: 'PUT', body: JSON.stringify({ pessoa_id: sel.value || null }) });
+    $('tarefasBoard').querySelectorAll('.tarefa-menu-trocar').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const painel = btn.closest('.tarefa-menu-painel');
+            painel.querySelector('.tarefa-menu-raiz').hidden = true;
+            painel.querySelector('.tarefa-menu-pessoas').hidden = false;
+        });
+    });
+
+    $('tarefasBoard').querySelectorAll('.tarefa-menu-voltar').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const painel = btn.closest('.tarefa-menu-painel');
+            painel.querySelector('.tarefa-menu-pessoas').hidden = true;
+            painel.querySelector('.tarefa-menu-raiz').hidden = false;
+        });
+    });
+
+    $('tarefasBoard').querySelectorAll('.tarefa-menu-editar').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const t = tarefas.find((x) => x.id === Number(btn.dataset.id));
+            btn.closest('details').open = false;
+            if (t) abrirModalTarefa(t);
+        });
+    });
+
+    $('tarefasBoard').querySelectorAll('.tarefa-mover-opcao').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const details = btn.closest('details.tarefa-menu');
+            await api(`/api/agenda/tarefas/${btn.dataset.id}`, { method: 'PUT', body: JSON.stringify({ pessoa_id: btn.dataset.pessoa || null }) });
+            if (details) details.open = false;
             await carregarTarefas();
         });
     });
 
-    $('tarefasBoard').querySelectorAll('.tarefa-del').forEach((btn) => {
+    $('tarefasBoard').querySelectorAll('.tarefa-menu-excluir').forEach((btn) => {
         btn.addEventListener('click', async () => {
+            if (!confirm('Excluir esta tarefa?')) return;
             await api(`/api/agenda/tarefas/${btn.dataset.id}`, { method: 'DELETE' });
             await carregarTarefas();
+        });
+    });
+
+    $('tarefasBoard').querySelectorAll('.btn-add-tarefa').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            btn.hidden = true;
+            const form = btn.nextElementSibling;
+            form.hidden = false;
+            form.querySelector('.add-tarefa-input').focus();
+        });
+    });
+
+    $('tarefasBoard').querySelectorAll('.btn-cancelar-tarefa').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const form = btn.closest('.add-tarefa-rapida');
+            form.reset();
+            form.hidden = true;
+            form.previousElementSibling.hidden = false;
+        });
+    });
+
+    // Recolhe o formulário sozinho se o usuário clicar fora dele sem enviar nem cancelar.
+    $('tarefasBoard').querySelectorAll('.add-tarefa-rapida').forEach((form) => {
+        form.addEventListener('focusout', (e) => {
+            if (form.contains(e.relatedTarget)) return;
+            setTimeout(() => {
+                if (form.hidden || form.contains(document.activeElement)) return;
+                form.reset();
+                form.hidden = true;
+                form.previousElementSibling.hidden = false;
+            }, 150);
         });
     });
 
@@ -232,6 +324,7 @@ function renderQuadro() {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = form.querySelector('.add-tarefa-input');
+            const descInput = form.querySelector('.add-tarefa-desc');
             const dataInput = form.querySelector('.add-tarefa-data');
             const horaInput = form.querySelector('.add-tarefa-hora');
             const titulo = input.value.trim();
@@ -239,9 +332,16 @@ function renderQuadro() {
             try {
                 await api('/api/agenda/tarefas', {
                     method: 'POST',
-                    body: JSON.stringify({ titulo, pessoa_id: form.dataset.pessoa || null, data: dataInput.value || null, hora: horaInput.value || null }),
+                    body: JSON.stringify({
+                        titulo,
+                        descricao: descInput.value.trim() || null,
+                        pessoa_id: form.dataset.pessoa || null,
+                        data: dataInput.value || null,
+                        hora: horaInput.value || null,
+                    }),
                 });
                 input.value = '';
+                descInput.value = '';
                 dataInput.value = '';
                 horaInput.value = '';
                 await carregarTarefas();
@@ -251,21 +351,34 @@ function renderQuadro() {
 }
 
 function linhaTarefaHtml(t) {
-    const opcoesPessoas = pessoas.filter((p) => p.ativo || p.id === t.pessoa_id)
-        .map((p) => `<option value="${p.id}" ${p.id === t.pessoa_id ? 'selected' : ''}>${escapeHtml(p.nome)}</option>`).join('');
+    const opcoesPessoas = [
+        `<button type="button" class="tarefa-mover-opcao" data-id="${t.id}" data-pessoa="">Geral</button>`,
+        ...pessoas.filter((p) => p.ativo || p.id === t.pessoa_id)
+            .map((p) => `<button type="button" class="tarefa-mover-opcao" data-id="${t.id}" data-pessoa="${p.id}">${escapeHtml(p.nome)}</button>`),
+    ].join('');
     return `<div class="tarefa-linha ${t.feito ? 'feita' : ''}">
         <div class="tarefa-principal">
             <input type="checkbox" class="tarefa-check" data-id="${t.id}" ${t.feito ? 'checked' : ''}>
-            <span class="tit">${escapeHtml(t.titulo)}</span>
+            <div class="tarefa-textos">
+                <span class="tit">${escapeHtml(t.titulo)}</span>
+                ${t.descricao ? `<span class="tarefa-desc">${escapeHtml(t.descricao)}</span>` : ''}
+            </div>
+            <details class="tarefa-menu">
+                <summary title="mais opções">⋮</summary>
+                <div class="tarefa-menu-painel">
+                    <div class="tarefa-menu-raiz">
+                        <button type="button" class="tarefa-menu-editar" data-id="${t.id}">Editar</button>
+                        <button type="button" class="tarefa-menu-trocar">Trocar</button>
+                        <button type="button" class="tarefa-menu-excluir" data-id="${t.id}">Excluir</button>
+                    </div>
+                    <div class="tarefa-menu-pessoas" hidden>
+                        <button type="button" class="tarefa-menu-voltar">← Voltar</button>
+                        ${opcoesPessoas}
+                    </div>
+                </div>
+            </details>
         </div>
-        <div class="tarefa-meta">
-            ${t.data ? `<span class="tarefa-data">${formatarDataBR(t.data)}${t.hora ? ' ' + t.hora : ''}</span>` : ''}
-            <select class="tarefa-pessoa" data-id="${t.id}" title="mover para outra pessoa">
-                <option value="">geral</option>
-                ${opcoesPessoas}
-            </select>
-            <button class="tarefa-del" data-id="${t.id}" title="excluir">×</button>
-        </div>
+        ${t.data ? `<div class="tarefa-meta"><span class="tarefa-data">${formatarDataBR(t.data)}${t.hora ? ' ' + t.hora : ''}</span></div>` : ''}
     </div>`;
 }
 
@@ -294,6 +407,7 @@ async function carregarPessoas() {
     pessoas = await api('/api/escala/pessoas');
     const opcoes = pessoas.filter((p) => p.ativo).map((p) => `<option value="${p.id}">${escapeHtml(p.nome)}</option>`).join('');
     $('compPessoa').innerHTML = '<option value="">Sem responsável</option>' + opcoes;
+    $('tarefaEditPessoa').innerHTML = '<option value="">Geral</option>' + opcoes;
 }
 
 function abrirModalNovo(dia, hora) {
@@ -361,6 +475,55 @@ $('btnExcluirComp').addEventListener('click', async () => {
         await api(`/api/agenda/compromissos/${id}`, { method: 'DELETE' });
         fecharModalComp();
         await Promise.all([carregarCompromissos(), carregarTarefas()]);
+    } catch (err) { alert(err.message); }
+});
+
+function abrirModalTarefa(t) {
+    modalAberto = true;
+    $('tarefaEditId').value = t.id;
+    $('tarefaEditTitulo').value = t.titulo;
+    $('tarefaEditDescricao').value = t.descricao || '';
+    $('tarefaEditData').value = t.data || '';
+    $('tarefaEditHora').value = t.hora || '';
+    $('tarefaEditPessoa').value = t.pessoa_id || '';
+    $('overlayTarefa').style.display = 'flex';
+    $('tarefaEditTitulo').focus();
+}
+
+function fecharModalTarefa() {
+    modalAberto = false;
+    $('overlayTarefa').style.display = 'none';
+}
+
+$('btnCancelarTarefaEdit').addEventListener('click', fecharModalTarefa);
+$('overlayTarefa').addEventListener('click', (e) => {
+    if (e.target.id === 'overlayTarefa') fecharModalTarefa();
+});
+
+$('formTarefaEditar').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = $('tarefaEditId').value;
+    const payload = {
+        titulo: $('tarefaEditTitulo').value.trim(),
+        descricao: $('tarefaEditDescricao').value.trim() || null,
+        data: $('tarefaEditData').value || null,
+        hora: $('tarefaEditHora').value || null,
+        pessoa_id: $('tarefaEditPessoa').value || null,
+    };
+    try {
+        await api(`/api/agenda/tarefas/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        fecharModalTarefa();
+        await carregarTarefas();
+    } catch (err) { alert(err.message); }
+});
+
+$('btnExcluirTarefaEdit').addEventListener('click', async () => {
+    const id = $('tarefaEditId').value;
+    if (!id || !confirm('Excluir esta tarefa?')) return;
+    try {
+        await api(`/api/agenda/tarefas/${id}`, { method: 'DELETE' });
+        fecharModalTarefa();
+        await carregarTarefas();
     } catch (err) { alert(err.message); }
 });
 

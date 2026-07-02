@@ -1,0 +1,59 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Usuários · LuxMenu</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th { font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+         color: var(--ink-faint); font-weight: 600; text-align: left;
+         padding: 0 10px 10px; border-bottom: 1px solid var(--rule); }
+    td { padding: 12px 10px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .badge { display: inline-block; font-size: 11px; border-radius: 20px;
+             padding: 2px 9px; font-family: var(--mono); }
+    .badge.admin { background: var(--stamp); color: #fff; }
+    .badge.user  { background: var(--rule); color: var(--ink-soft); }
+    .badge.inativo { background: var(--rule); color: var(--ink-faint); }
+    .acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+    .acoes button { font-family: var(--mono); font-size: 11.5px; border: 1px solid var(--rule-strong);
+                    background: var(--card); color: var(--ink-soft); border-radius: 7px;
+                    padding: 3px 9px; cursor: pointer; }
+    .acoes button:hover { border-color: var(--stamp); color: var(--stamp); }
+    .acoes button.danger:hover { border-color: #9A3B22; color: #9A3B22; }
+    .form-novo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+    .form-novo input, .form-novo select {
+        border: 1px solid var(--rule-strong); border-radius: 8px;
+        padding: 8px 10px; font-size: 13px; background: var(--card); color: var(--ink); }
+    .form-novo .span2 { grid-column: span 2; }
+    .btn { border: 1px solid var(--stamp); background: var(--stamp); color: #fff;
+           border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+    .btn:hover { opacity: .88; }
+</style>
+
+<div class="wrap">
+    <a class="backnav" href="index.html">← Menu</a>
+    <p class="eyebrow">Admin · Gestão de Acesso</p>
+    <h1>Usuários</h1>
+    <p class="sub">Adicione, desative ou redefina a senha dos membros da equipe.</p>
+
+    <div class="card" style="margin-bottom:24px">
+        <h2>Novo usuário</h2>
+        <div class="form-novo">
+            <input id="nNome"     placeholder="Nome completo">
+            <input id="nUsername" placeholder="Nome de usuário (sem espaços)">
+            <input id="nSenha"    placeholder="Senha" type="password">
+            <select id="nRole"><option value="user">Usuário</option><option value="admin">Admin</option></select>
+            <div class="span2"><button class="btn" id="btnAdicionar">Adicionar</button></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Equipe</h2>
+        <table id="tabela"><tbody id="tbody"></tbody></table>
+    </div>
+
+    <footer>painel admin · LuxMenu</footer>
+</div>
+
+<script src="shared.js"></script>
+<script src="admin-usuarios.js"></script>
