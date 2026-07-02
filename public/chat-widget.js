@@ -185,10 +185,25 @@
     // ── Deletar ──
 
     async function deletarMensagem(id) {
-        if (!confirm('Apagar esta mensagem?')) return;
-        try {
-            await fetch(`/api/chat/mensagens/${id}`, { method: 'DELETE' });
-        } catch { /* silencioso */ }
+        // Marca o elemento como "pendente" visualmente antes de confirmar
+        const el = document.querySelector(`.cw-msg[data-id="${id}"]`);
+        if (!el) return;
+        const btn = el.querySelector('.cw-del');
+        if (btn) { btn.textContent = '✓?'; btn.title = 'Clique de novo para confirmar'; }
+
+        // Segundo clique confirma
+        if (el.dataset.deletePending === '1') {
+            try { await fetch(`/api/chat/mensagens/${id}`, { method: 'DELETE' }); }
+            catch { /* silencioso */ }
+        } else {
+            el.dataset.deletePending = '1';
+            setTimeout(() => {
+                if (el.dataset.deletePending) {
+                    el.dataset.deletePending = '';
+                    if (btn) { btn.textContent = '🗑'; btn.title = 'Apagar mensagem'; }
+                }
+            }, 3000);
+        }
     }
 
     function removerMsgDom(id) {

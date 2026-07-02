@@ -31,11 +31,12 @@ function setup(app) {
             const texto = String(msg.texto).slice(0, 1000).trim();
             const enviado_em = new Date().toISOString();
 
-            db.prepare('INSERT INTO mensagens (usuario_id, texto, enviado_em) VALUES (?, ?, ?)')
+            const { lastInsertRowid } = db.prepare('INSERT INTO mensagens (usuario_id, texto, enviado_em) VALUES (?, ?, ?)')
                 .run(usuario.id, texto, enviado_em);
 
             broadcast({
                 tipo: 'mensagem',
+                id: lastInsertRowid,
                 nome: usuario.nome,
                 username: usuario.username,
                 texto,
