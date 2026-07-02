@@ -114,6 +114,36 @@
         ).join('');
     }
 
+    // ── Notificações ──
+
+    function tocarSom() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.18, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.25);
+        } catch { /* silencioso */ }
+    }
+
+    function notificar(nome, texto) {
+        const painelAberto = document.getElementById('cwPainel')?.classList.contains('aberto');
+        if (painelAberto && document.visibilityState === 'visible') return;
+        tocarSom();
+        if (Notification.permission === 'granted') {
+            new Notification(`💬 ${nome}`, {
+                body: texto || '📎 enviou um arquivo',
+                tag: 'luxmenu-chat',
+            });
+        }
+    }
+
     // ── WebSocket ──
 
     function conectarWs() {
@@ -122,7 +152,10 @@
         ws = new WebSocket(`${proto}://${location.host}/chat/ws`);
         ws.addEventListener('message', (e) => {
             const dados = JSON.parse(e.data);
-            if (dados.tipo === 'mensagem') adicionarMsg(dados, false);
+            if (dados.tipo === 'mensagem') {
+                adicionarMsg(dados, false);
+                if (dados.username !== eu.username) notificar(dados.nome, dados.texto);
+            }
             if (dados.tipo === 'online') renderOnline(dados.usuarios);
         });
         ws.addEventListener('close', () => setTimeout(conectarWs, 3000));
@@ -256,6 +289,7 @@
             eu = await res.json();
             injetar();
             conectarWs();
+            if (Notification.permission === 'default') Notification.requestPermission();
         } catch { /* silencioso */ }
     }
 

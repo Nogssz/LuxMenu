@@ -10,7 +10,6 @@ function broadcast(dados) {
     }
 }
 
-module.exports.broadcast = broadcast;
 
 function listaOnline() {
     return [...online.values()].map(u => ({ id: u.id, nome: u.nome, username: u.username }));
@@ -51,4 +50,4 @@ function setup(app) {
     });
 }
 
-module.exports = { setup };
+module.exports = { setup, broadcast };
