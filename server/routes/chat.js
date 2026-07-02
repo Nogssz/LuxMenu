@@ -52,6 +52,17 @@ router.post('/arquivo', upload.single('arquivo'), (req, res) => {
     res.json({ ok: true });
 });
 
+router.delete('/mensagens/:id', (req, res) => {
+    const { broadcast } = require('../ws-chat');
+    const id = Number(req.params.id);
+    const msg = db.prepare('SELECT usuario_id FROM mensagens WHERE id = ?').get(id);
+    if (!msg) return res.status(404).json({ error: 'mensagem não encontrada' });
+    if (msg.usuario_id !== req.session.usuario.id) return res.status(403).json({ error: 'não autorizado' });
+    db.prepare('DELETE FROM mensagens WHERE id = ?').run(id);
+    broadcast({ tipo: 'deletar', id });
+    res.json({ ok: true });
+});
+
 router.get('/arquivo/:nome', (req, res) => {
     const nome = path.basename(req.params.nome);
     const arq  = path.join(ARQ_DIR, nome);
