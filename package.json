@@ -23,6 +23,7 @@
     "express-session": "^1.19.0",
     "express-ws": "^5.0.2",
     "fuse.js": "^7.4.2",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "node-forge": "^1.4.0"
   }
 }

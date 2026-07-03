@@ -82,6 +82,7 @@ async function copiarTexto(texto) {
         { href: 'escala.html', icone: '📅', titulo: 'Escala de Sábados' },
         { href: 'agenda.html', icone: '📆', titulo: 'Agenda' },
         { href: 'chat.html', icone: '💬', titulo: 'Chat da equipe' },
+        { href: 'certificado.html', icone: '🔐', titulo: 'Extração de Certificado' },
     ];
 
     function paginaAtual() {
