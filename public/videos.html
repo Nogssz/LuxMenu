@@ -266,6 +266,151 @@
         gap: 8px;
         margin-top: 4px;
     }
+
+    .clientebox {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        border: 1px solid var(--stamp);
+        border-radius: 12px;
+        padding: 16px 18px;
+        background: var(--card);
+        margin-bottom: 20px;
+    }
+
+    .clientebox .cb-texto h2 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 650;
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--ink);
+    }
+
+    .clientebox .cb-texto p {
+        margin: 0;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+    }
+
+    .clientebox .cb-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .clientebox .btn {
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .fluxo-box {
+        border: 1px solid var(--stamp);
+        border-radius: 14px;
+        padding: 18px 18px 16px;
+        background: var(--card);
+        margin-bottom: 20px;
+    }
+
+    .fluxo-titulo {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--stamp);
+    }
+
+    .fluxo-sub {
+        margin: 0 0 16px;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+    }
+
+    .fluxo-etapas {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .fluxo-etapa {
+        flex: 1 1 220px;
+        min-width: 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .fluxo-num {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--stamp);
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+
+    .fluxo-seta {
+        align-self: center;
+        font-size: 20px;
+        color: var(--ink-faint);
+        padding-top: 26px;
+        flex: 0 0 auto;
+    }
+
+    .fluxo-ou {
+        text-align: center;
+        font-size: 11px;
+        font-family: var(--mono);
+        color: var(--ink-faint);
+    }
+
+    .fluxo-mini {
+        display: flex;
+        gap: 10px;
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 8px;
+    }
+
+    .fluxo-mini .fm-thumb {
+        width: 72px;
+        height: 41px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: var(--rule);
+    }
+
+    .fluxo-mini .fm-titulo {
+        margin: 0 0 4px;
+        font-size: 12.5px;
+        font-weight: 650;
+        color: var(--ink);
+    }
+
+    .fluxo-mini .fm-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .fluxo-mini .fm-actions a, .fluxo-mini .fm-actions button {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        border: 1px solid var(--rule-strong);
+        background: var(--card);
+        color: var(--ink-soft);
+        border-radius: 6px;
+        padding: 3px 8px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .fluxo-mini .fm-actions a:hover, .fluxo-mini .fm-actions button:hover {
+        border-color: var(--stamp);
+        color: var(--stamp);
+    }
 </style>
 
 <div class="wrap">
@@ -273,6 +418,23 @@
     <p class="eyebrow">Suporte · Treinamento</p>
     <h1>Vídeos Tutoriais</h1>
     <p class="sub">Busque pelo assunto (ex: "nota de compra", "importação", "backup") e pegue o link pra enviar ao cliente.</p>
+
+    <div class="fluxo-box" id="fluxoBox" style="display:none">
+        <h2 class="fluxo-titulo">Fluxo do processo: Orçamento → Ordem de Serviço → Nota Fiscal</h2>
+        <p class="fluxo-sub">Siga essa ordem pra treinar o cliente do início ao fim do processo.</p>
+        <div class="fluxo-etapas" id="fluxoEtapas"></div>
+    </div>
+
+    <div class="clientebox">
+        <div class="cb-texto">
+            <h2>Biblioteca de vídeos para clientes</h2>
+            <p>Link único e permanente, sem gestão de vídeos individuais — pode enviar direto ao cliente.</p>
+        </div>
+        <div class="cb-actions">
+            <button class="btn" id="btnCopiarClientes">copiar link</button>
+            <a class="btn cancelar" href="https://luxsistemas.github.io/Lux-Menu/videos/" target="_blank" rel="noopener">abrir</a>
+        </div>
+    </div>
 
     <div class="buscabox"><input id="busca" placeholder="Buscar por título, tema ou palavra-chave..." autofocus></div>
 

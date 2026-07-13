@@ -62,6 +62,46 @@ function cardHtml(v) {
         </div>`;
 }
 
+const FLUXO_ETAPAS = [
+    { titulos: ['Como criar um orçamento'] },
+    { titulos: ['Gerar O.S através de orçamento', 'Criação de ordem de serviço do zero'] },
+    { titulos: ['Importar O.S na nota fiscal'] },
+];
+
+function fluxoMiniHtml(v) {
+    const thumb = thumbUrl(v.url);
+    return `
+        <div class="fluxo-mini">
+            ${thumb ? `<img class="fm-thumb" src="${thumb}" alt="">` : '<div class="fm-thumb"></div>'}
+            <div class="fm-body">
+                <p class="fm-titulo">${escapeHtml(v.titulo)}</p>
+                <div class="fm-actions">
+                    <a href="${escapeHtml(v.url)}" target="_blank" rel="noopener">assistir</a>
+                    <button class="fm-copy" data-url="${escapeHtml(v.url)}">copiar</button>
+                </div>
+            </div>
+        </div>`;
+}
+
+function renderFluxo() {
+    const porTitulo = Object.fromEntries(todosVideos.map(v => [v.titulo, v]));
+    const etapasHtml = FLUXO_ETAPAS.map(etapa => {
+        const videos = etapa.titulos.map(t => porTitulo[t]).filter(Boolean);
+        if (!videos.length) return null;
+        return videos.map((v, i) => (i > 0 ? '<div class="fluxo-ou">ou</div>' : '') + fluxoMiniHtml(v)).join('');
+    });
+
+    if (etapasHtml.some(e => e === null)) {
+        $('fluxoBox').style.display = 'none';
+        return;
+    }
+
+    $('fluxoEtapas').innerHTML = etapasHtml
+        .map((html, i) => `<div class="fluxo-etapa"><div class="fluxo-num">Etapa ${i + 1}</div>${html}</div>`)
+        .join('<div class="fluxo-seta">→</div>');
+    $('fluxoBox').style.display = 'block';
+}
+
 let todosVideos = [];
 let fuseIndex = null;
 
@@ -152,6 +192,14 @@ $('lista').addEventListener('click', async (e) => {
     setTimeout(() => { copyBtn.textContent = 'copiar link'; copyBtn.classList.remove('ok'); }, 1800);
 });
 
+$('fluxoEtapas').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.fm-copy');
+    if (!btn) return;
+    const ok = await copiarTexto(btn.dataset.url);
+    btn.textContent = ok ? 'copiado ✓' : 'não copiou';
+    setTimeout(() => { btn.textContent = 'copiar'; }, 1800);
+});
+
 $('sugestoes').addEventListener('click', (e) => {
     const btn = e.target.closest('.sugestao');
     if (!btn) return;
@@ -182,4 +230,5 @@ $('busca').addEventListener('input', () => {
     todosVideos = await res.json();
     construirFuse();
     renderAgrupado();
+    renderFluxo();
 })();
