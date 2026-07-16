@@ -245,7 +245,7 @@ function renderQuadro() {
             .filter((t) => !filtroUrgencia || t.urgencia === filtroUrgencia);
         const pendentes = tarefasCol.filter((t) => !t.feito);
         const concluidas = tarefasCol.filter((t) => t.feito);
-        const compsCol = compromissosFuturos.filter((c) => (c.pessoa_id || null) === col.id);
+        const compsCol = filtroUrgencia ? [] : compromissosFuturos.filter((c) => (c.pessoa_id || null) === col.id);
 
         const itens = [
             ...pendentes.map((t) => ({ tipo: 'tarefa', data: t.data, hora: t.hora || '', obj: t })),
