@@ -96,6 +96,22 @@
     "categoria_nome": "Cadastros"
   },
   {
+    "id": 61,
+    "titulo": "Devolução de compra - Como fazer",
+    "url": "https://youtu.be/CXbT4h26LaI",
+    "tags": "compras, devolução, específico",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
+    "id": 60,
+    "titulo": "Devolução de compras - Visão geral",
+    "url": "https://youtu.be/IdZUYCrVt9M",
+    "tags": "compras, devolução, visão geral",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
     "id": 50,
     "titulo": "Etiqueta dos produtos",
     "url": "https://youtu.be/bz9_GbvDjqM",
