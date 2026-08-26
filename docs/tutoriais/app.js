@@ -324,9 +324,25 @@ function cardVideoHtml(v) {
             <div class="vbody">
                 <h2>${escapeHtml(v.titulo)}</h2>
                 ${v.descricao ? `<p class="vdesc">${escapeHtml(v.descricao)}</p>` : ''}
-                <a href="${escapeHtml(v.url)}" target="_blank" rel="noopener">▶ assistir</a>
+                <button type="button" class="btn-assistir" data-url="${escapeHtml(v.url)}" data-titulo="${escapeHtml(v.titulo)}">▶ assistir</button>
             </div>
         </div>`;
+}
+
+function abrirPlayer(url, titulo) {
+    const id = extrairIdYoutube(url);
+    $('playerTitulo').textContent = titulo;
+    if (id) {
+        $('playerCorpo').innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" title="${escapeHtml(titulo)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    } else {
+        $('playerCorpo').innerHTML = `<div class="player-sem-embed">Esse vídeo não pode ser exibido aqui. <a href="${escapeHtml(url)}" target="_blank" rel="noopener">Abrir em outra aba</a></div>`;
+    }
+    $('overlayPlayer').style.display = 'flex';
+}
+
+function fecharPlayer() {
+    $('overlayPlayer').style.display = 'none';
+    $('playerCorpo').innerHTML = '';
 }
 
 function placeholderHtml(texto) {
@@ -430,6 +446,11 @@ function renderTudo() {
 }
 
 document.body.addEventListener('click', (e) => {
+    const assistir = e.target.closest('.btn-assistir');
+    if (assistir) {
+        abrirPlayer(assistir.dataset.url, assistir.dataset.titulo);
+        return;
+    }
     const sub = e.target.closest('.subitem');
     if (sub) {
         navegarPara(sub.dataset.no);
@@ -463,6 +484,14 @@ $('limparBuscaGeral').addEventListener('click', () => {
     $('buscaGeral').value = '';
     $('limparBuscaGeral').hidden = true;
     renderConteudo();
+});
+
+$('fecharPlayer').addEventListener('click', fecharPlayer);
+$('overlayPlayer').addEventListener('click', (e) => {
+    if (e.target.id === 'overlayPlayer') fecharPlayer();
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('overlayPlayer').style.display === 'flex') fecharPlayer();
 });
 
 restaurarEstadoDaUrl();

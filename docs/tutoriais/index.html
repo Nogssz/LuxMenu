@@ -375,7 +375,7 @@
         margin: 0 0 10px;
     }
 
-    .vcard a {
+    .btn-assistir {
         display: inline-block;
         font-family: var(--mono);
         font-size: 11.5px;
@@ -385,9 +385,89 @@
         border-radius: 7px;
         padding: 6px 12px;
         text-decoration: none;
+        cursor: pointer;
     }
 
-    .vcard a:hover { background: var(--erp-verde-escuro); border-color: var(--erp-verde-escuro); }
+    .btn-assistir:hover { background: var(--erp-verde-escuro); border-color: var(--erp-verde-escuro); }
+
+    .overlay-player {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .75);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 24px;
+    }
+
+    .player-modal {
+        background: #000;
+        border-radius: 10px;
+        overflow: hidden;
+        width: 100%;
+        max-width: 900px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+    }
+
+    .player-cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--card);
+    }
+
+    .player-cabecalho h2 {
+        font-size: 13.5px;
+        margin: 0;
+        color: var(--ink);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .player-fechar {
+        border: 0;
+        background: none;
+        color: var(--ink-faint);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        flex: 0 0 auto;
+        padding: 2px 6px;
+    }
+
+    .player-fechar:hover { color: var(--ink); }
+
+    .player-corpo {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #000;
+    }
+
+    .player-corpo iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    .player-sem-embed {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #fff;
+        font-size: 13.5px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .player-sem-embed a { color: var(--erp-verde); }
 
     .placeholder {
         display: flex;
@@ -445,6 +525,16 @@
 <div class="rodape-proto">
     <span>central de tutoriais</span>
     <span>LuxAUTO</span>
+</div>
+
+<div class="overlay-player" id="overlayPlayer">
+    <div class="player-modal">
+        <div class="player-cabecalho">
+            <h2 id="playerTitulo"></h2>
+            <button type="button" class="player-fechar" id="fecharPlayer">✕</button>
+        </div>
+        <div class="player-corpo" id="playerCorpo"></div>
+    </div>
 </div>
 
 <script type="module" src="app.js"></script>
