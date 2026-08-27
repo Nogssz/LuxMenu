@@ -453,6 +453,7 @@ document.body.addEventListener('click', (e) => {
     }
     const sub = e.target.closest('.subitem');
     if (sub) {
+        if (sub.dataset.no === 'vendas>pdv-vendas') { trocarSistema('pdv'); return; }
         navegarPara(sub.dataset.no);
         return;
     }
