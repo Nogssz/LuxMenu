@@ -51,6 +51,7 @@ const VIDEOS_RETAGUARDA = {
     },
     'compras>devolucao-compra': { geral: [60], essenciais: [61] },
     'vendas>orcamento': { geral: [62], essenciais: [63] },
+    'vendas>lista-vendas': { geral: [64], essenciais: [65] },
 };
 
 const VIDEOS_PDV = {};
