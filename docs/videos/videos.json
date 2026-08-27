@@ -96,6 +96,14 @@
     "categoria_nome": "Cadastros"
   },
   {
+    "id": 63,
+    "titulo": "Criando um orçamento",
+    "url": "https://youtu.be/gABUpXv9SGI",
+    "tags": "vendas, orçamento, criar, cadastro",
+    "descricao": null,
+    "categoria_nome": "Orçamentos"
+  },
+  {
     "id": 61,
     "titulo": "Devolução de compra - Como fazer",
     "url": "https://youtu.be/CXbT4h26LaI",
@@ -174,6 +182,14 @@
     "tags": "compras, nota de fornecedor, visão geral",
     "descricao": null,
     "categoria_nome": "Financeiro"
+  },
+  {
+    "id": 62,
+    "titulo": "Orçamento - Visão geral",
+    "url": "https://youtu.be/iZOacQy9XlY",
+    "tags": "vendas, orçamento, visão geral",
+    "descricao": null,
+    "categoria_nome": "Orçamentos"
   },
   {
     "id": 44,

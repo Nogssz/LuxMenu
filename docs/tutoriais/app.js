@@ -50,6 +50,7 @@ const VIDEOS_RETAGUARDA = {
         nota: 'Se a importação automática não funcionar, não é erro do sistema — às vezes é o site da Receita que está fora do ar. Nesse caso, use a importação pela chave de acesso.',
     },
     'compras>devolucao-compra': { geral: [60], essenciais: [61] },
+    'vendas>orcamento': { geral: [62], essenciais: [63] },
 };
 
 const VIDEOS_PDV = {};
