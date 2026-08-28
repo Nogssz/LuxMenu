@@ -50,12 +50,12 @@ function renderForm(s) {
     }
 
     const hoje = hojeISO();
-    const outras = sabados.filter(o => o.data !== s.data && o.data >= hoje);
+    const outras = sabados.filter(o => o.data !== s.data && o.data >= hoje && !o.folga);
     const opcoesDatas = outras.map(o => `<option value="${o.data}">${formatarDataBR(o.data)} — ${escapeHtml(o.pessoa_nome)}</option>`).join('');
     return `
         <div class="form-inline">
             <span>Trocar com:</span>
-            <select id="selDataTrocar">${opcoesDatas || '<option disabled>nenhum outro sábado futuro</option>'}</select>
+            <select id="selDataTrocar">${opcoesDatas || '<option disabled>nenhum outro sábado futuro disponível</option>'}</select>
             <button class="btn" id="btnSalvarTrocar" ${outras.length ? '' : 'disabled'}>Confirmar troca</button>
             <button class="btn secundario" id="btnCancelarEdicao">Cancelar</button>
         </div>`;
@@ -68,16 +68,31 @@ function renderEscala() {
     $('tbodyEscala').innerHTML = sabados.map(s => {
         const passada = s.data < hoje;
         let classe = '';
-        if (passada) classe = 'passada';
+        if (s.folga) classe = 'folga';
+        else if (passada) classe = 'passada';
         else if (primeiraFutura) { classe = 'proxima'; primeiraFutura = false; }
 
-        const badge = s.manual
-            ? `<span class="badge-manual" title="${escapeHtml(s.observacao || 'ajustado manualmente')}">ajustado</span>`
-            : '';
+        let nomeDisplay;
+        if (s.folga) {
+            nomeDisplay = `<span class="badge-folga">sem expediente</span>`;
+        } else {
+            const badge = s.manual
+                ? `<span class="badge-manual" title="${escapeHtml(s.observacao || 'ajustado manualmente')}">ajustado</span>`
+                : '';
+            nomeDisplay = `<span class="pessoa">${escapeHtml(s.pessoa_nome)}</span>${badge}`;
+        }
 
-        const acoes = passada ? '' : `
-            <button class="btn-reatribuir" data-data="${s.data}">Reatribuir</button>
-            <button class="btn-trocar" data-data="${s.data}">Trocar</button>`;
+        let acoes = '';
+        if (!passada) {
+            if (s.folga) {
+                acoes = `<button class="btn-despular" data-data="${s.data}">Retomar</button>`;
+            } else {
+                acoes = `
+                    <button class="btn-reatribuir" data-data="${s.data}">Reatribuir</button>
+                    <button class="btn-trocar" data-data="${s.data}">Trocar</button>
+                    <button class="btn-pular" data-data="${s.data}">Pular</button>`;
+            }
+        }
 
         const linhaForm = (editando && editando.data === s.data)
             ? `<tr class="${classe}"><td colspan="3">${renderForm(s)}</td></tr>`
@@ -85,7 +100,7 @@ function renderEscala() {
 
         return `<tr class="${classe}">
                 <td>${formatarDataBR(s.data)}</td>
-                <td><span class="pessoa">${escapeHtml(s.pessoa_nome)}</span>${badge}</td>
+                <td>${nomeDisplay}</td>
                 <td class="acoes">${acoes}</td>
             </tr>${linhaForm}`;
     }).join('');
@@ -104,6 +119,8 @@ function renderPessoas() {
 $('tbodyEscala').addEventListener('click', async (e) => {
     const btnReatribuir = e.target.closest('.btn-reatribuir');
     const btnTrocar = e.target.closest('.btn-trocar');
+    const btnPular = e.target.closest('.btn-pular');
+    const btnDespular = e.target.closest('.btn-despular');
     const btnCancelar = e.target.closest('#btnCancelarEdicao');
     const btnSalvarReatribuir = e.target.closest('#btnSalvarReatribuir');
     const btnSalvarTrocar = e.target.closest('#btnSalvarTrocar');
@@ -111,6 +128,33 @@ $('tbodyEscala').addEventListener('click', async (e) => {
     if (btnReatribuir) { editando = { data: btnReatribuir.dataset.data, modo: 'reatribuir' }; renderEscala(); return; }
     if (btnTrocar) { editando = { data: btnTrocar.dataset.data, modo: 'trocar' }; renderEscala(); return; }
     if (btnCancelar) { editando = null; renderEscala(); return; }
+
+    if (btnPular) {
+        const data = btnPular.dataset.data;
+        const s = sabados.find(x => x.data === data);
+        if (!confirm(`Pular ${formatarDataBR(data)}? A vez de ${escapeHtml(s.pessoa_nome)} passa para o sábado seguinte.`)) return;
+        try {
+            await api('/api/escala/sabados/pular', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data }),
+            });
+            await carregar();
+        } catch (err) { alert(err.message); }
+        return;
+    }
+
+    if (btnDespular) {
+        const data = btnDespular.dataset.data;
+        if (!confirm(`Retomar ${formatarDataBR(data)} como sábado normal?`)) return;
+        try {
+            await api('/api/escala/sabados/despular', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data }),
+            });
+            await carregar();
+        } catch (err) { alert(err.message); }
+        return;
+    }
 
     if (btnSalvarReatribuir) {
         const pessoa_id = Number($('selPessoaReatribuir').value);
@@ -157,9 +201,6 @@ $('listaPessoas').addEventListener('change', async (e) => {
 
 carregar();
 
-// Atualiza a lista periodicamente pra refletir mudanças feitas por outras pessoas,
-// sem recarregar a página. Pula o ciclo se a aba estiver em segundo plano ou se
-// houver uma edição (troca/reatribuição) em aberto, pra não interromper quem está digitando.
 setInterval(() => {
     if (document.hidden || editando) return;
     carregar();

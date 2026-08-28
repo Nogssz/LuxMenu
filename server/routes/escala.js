@@ -18,7 +18,6 @@ function listaPessoas() {
     return db.prepare('SELECT * FROM pessoas_escala ORDER BY ordem').all();
 }
 
-// Percorre a ordem fixa circularmente a partir de "depoisDeOrdem" e retorna a primeira pessoa ativa.
 function proximoAtivo(pessoas, depoisDeOrdem) {
     const n = pessoas.length;
     if (n === 0) return null;
@@ -31,8 +30,6 @@ function proximoAtivo(pessoas, depoisDeOrdem) {
     return null;
 }
 
-// Recalcula os sábados futuros não-manuais seguindo a ordem fixa filtrada por ativo,
-// continuando a partir de onde a escala realmente parou (último sábado passado).
 function redistribuirFuturos() {
     const pessoas = listaPessoas();
     const porId = new Map(pessoas.map(p => [p.id, p]));
@@ -45,6 +42,7 @@ function redistribuirFuturos() {
     const atualizar = db.prepare('UPDATE escala_sabados SET pessoa_id = ? WHERE id = ?');
 
     for (const linha of futuras) {
+        if (linha.folga) continue; // sábado pulado: não consome a vez na rotação
         if (linha.manual) {
             ponteiro = porId.get(linha.pessoa_id).ordem;
             continue;
@@ -56,7 +54,6 @@ function redistribuirFuturos() {
     }
 }
 
-// Garante que existam ao menos "minimo" sábados futuros gerados, estendendo a partir da última linha existente.
 function garantirHorizonte(minimo) {
     const hoje = hojeISO();
     const totalFuturas = db.prepare('SELECT COUNT(*) AS c FROM escala_sabados WHERE data >= ?').get(hoje).c;
@@ -68,9 +65,12 @@ function garantirHorizonte(minimo) {
     const pessoas = listaPessoas();
     const porId = new Map(pessoas.map(p => [p.id, p]));
     let cursor = new Date(`${ultima.data}T00:00:00`);
-    let ponteiro = porId.get(ultima.pessoa_id).ordem;
 
-    const inserir = db.prepare('INSERT INTO escala_sabados (data, pessoa_id, manual, criado_em) VALUES (?, ?, 0, ?)');
+    // Encontra o ponteiro real olhando o último não-folga da lista
+    const ultimaNaoFolga = db.prepare('SELECT * FROM escala_sabados WHERE folga = 0 ORDER BY data DESC LIMIT 1').get();
+    let ponteiro = ultimaNaoFolga ? porId.get(ultimaNaoFolga.pessoa_id).ordem : (pessoas[0] ? pessoas[0].ordem - 1 : 0);
+
+    const inserir = db.prepare('INSERT INTO escala_sabados (data, pessoa_id, manual, folga, criado_em) VALUES (?, ?, 0, 0, ?)');
     const faltam = minimo - totalFuturas;
     for (let i = 0; i < faltam; i++) {
         cursor = new Date(cursor.getTime() + 7 * 86400000);
@@ -133,7 +133,7 @@ router.put('/sabados/:data', (req, res) => {
     const pessoa = db.prepare('SELECT * FROM pessoas_escala WHERE id = ?').get(pessoa_id);
     if (!pessoa) return res.status(400).json({ error: 'pessoa inválida' });
 
-    db.prepare('UPDATE escala_sabados SET pessoa_id = ?, observacao = ?, manual = 1 WHERE id = ?')
+    db.prepare('UPDATE escala_sabados SET pessoa_id = ?, observacao = ?, manual = 1, folga = 0 WHERE id = ?')
         .run(pessoa.id, observacao && observacao.trim() ? observacao.trim() : null, linha.id);
 
     redistribuirFuturos();
@@ -154,6 +154,7 @@ router.post('/sabados/trocar', (req, res) => {
 
     const hoje = hojeISO();
     if (linhaA.data < hoje || linhaB.data < hoje) return res.status(400).json({ error: 'só é possível trocar sábados futuros' });
+    if (linhaA.folga || linhaB.folga) return res.status(400).json({ error: 'não é possível trocar sábados marcados como folga' });
 
     db.prepare('UPDATE escala_sabados SET pessoa_id = ?, manual = 1 WHERE id = ?').run(linhaB.pessoa_id, linhaA.id);
     db.prepare('UPDATE escala_sabados SET pessoa_id = ?, manual = 1 WHERE id = ?').run(linhaA.pessoa_id, linhaB.id);
@@ -165,6 +166,44 @@ router.post('/sabados/trocar', (req, res) => {
         JOIN pessoas_escala p ON p.id = s.pessoa_id WHERE s.id IN (?, ?)
         ORDER BY s.data
     `).all(linhaA.id, linhaB.id));
+});
+
+router.post('/sabados/pular', (req, res) => {
+    const { data } = req.body;
+    if (!data) return res.status(400).json({ error: 'data obrigatória' });
+
+    const hoje = hojeISO();
+    if (data < hoje) return res.status(400).json({ error: 'não é possível pular sábados passados' });
+
+    const linha = db.prepare('SELECT * FROM escala_sabados WHERE data = ?').get(data);
+    if (!linha) return res.status(404).json({ error: 'sábado não encontrado' });
+    if (linha.folga) return res.status(400).json({ error: 'sábado já marcado como sem expediente' });
+
+    db.prepare('UPDATE escala_sabados SET folga = 1, manual = 1 WHERE id = ?').run(linha.id);
+
+    // Adiciona +1 sábado no horizonte para compensar a folga
+    const total = db.prepare('SELECT COUNT(*) AS c FROM escala_sabados WHERE data >= ?').get(hoje).c;
+    garantirHorizonte(total + 1);
+    redistribuirFuturos();
+
+    res.json({ ok: true });
+});
+
+router.post('/sabados/despular', (req, res) => {
+    const { data } = req.body;
+    if (!data) return res.status(400).json({ error: 'data obrigatória' });
+
+    const hoje = hojeISO();
+    if (data < hoje) return res.status(400).json({ error: 'não é possível alterar sábados passados' });
+
+    const linha = db.prepare('SELECT * FROM escala_sabados WHERE data = ?').get(data);
+    if (!linha) return res.status(404).json({ error: 'sábado não encontrado' });
+    if (!linha.folga) return res.status(400).json({ error: 'sábado não está marcado como folga' });
+
+    db.prepare('UPDATE escala_sabados SET folga = 0, manual = 0 WHERE id = ?').run(linha.id);
+    redistribuirFuturos();
+
+    res.json({ ok: true });
 });
 
 module.exports = router;
