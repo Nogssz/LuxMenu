@@ -8,18 +8,18 @@ router.get('/', (req, res) => {
     const ano = Number(req.query.ano);
     if (!mes || !ano) return res.status(400).json({ error: 'mes e ano são obrigatórios' });
 
-    const { contabilidade_id, busca, feito } = req.query;
+    const { contabilidade_nome, busca, feito } = req.query;
 
     let sql = `SELECT c.id, c.nome, c.cnpj, c.responsavel, c.contato, c.obs,
                       ct.id AS contabilidade_id, ct.nome AS contabilidade_nome,
-                      COALESCE(f.feito, 0) AS feito, f.marcado_em
+                      COALESCE(f.feito, 0) AS feito, COALESCE(f.chamado, 0) AS chamado, f.marcado_em
                FROM clientes c
                LEFT JOIN contabilidades ct ON ct.id = c.contabilidade_id
                LEFT JOIN fechamentos_mensais f ON f.cliente_id = c.id AND f.mes = ? AND f.ano = ?
                WHERE c.ativo = 1`;
     const params = [mes, ano];
 
-    if (contabilidade_id) { sql += ' AND c.contabilidade_id = ?'; params.push(contabilidade_id); }
+    if (contabilidade_nome) { sql += ' AND ct.nome LIKE ?'; params.push(`${contabilidade_nome}%`); }
     if (busca) { sql += ' AND (c.nome LIKE ? OR c.cnpj LIKE ?)'; params.push(`%${busca}%`, `%${busca}%`); }
     if (feito === '1' || feito === '0') { sql += ' AND COALESCE(f.feito, 0) = ?'; params.push(Number(feito)); }
 
@@ -40,23 +40,36 @@ router.get('/', (req, res) => {
         }
     }
 
-    const resultado = linhas.map(l => ({ ...l, feito: Boolean(l.feito), valores: valoresPorCliente[l.id] || {} }));
+    const resultado = linhas.map(l => ({ ...l, feito: Boolean(l.feito), chamado: Boolean(l.chamado), valores: valoresPorCliente[l.id] || {} }));
     res.json(resultado);
 });
 
 router.put('/', (req, res) => {
-    const { cliente_id, mes, ano, feito } = req.body;
+    const { cliente_id, mes, ano, feito, chamado } = req.body;
     if (!cliente_id || !mes || !ano) return res.status(400).json({ error: 'cliente_id, mes e ano são obrigatórios' });
 
     const cliente = db.prepare('SELECT id FROM clientes WHERE id = ?').get(cliente_id);
     if (!cliente) return res.status(404).json({ error: 'cliente não encontrado' });
 
-    const marcadoEm = new Date().toISOString();
-    db.prepare(`INSERT INTO fechamentos_mensais (cliente_id, mes, ano, feito, marcado_em) VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(cliente_id, mes, ano) DO UPDATE SET feito = excluded.feito, marcado_em = excluded.marcado_em`)
-        .run(cliente_id, mes, ano, feito ? 1 : 0, marcadoEm);
+    const atual = db.prepare('SELECT feito, chamado FROM fechamentos_mensais WHERE cliente_id = ? AND mes = ? AND ano = ?').get(cliente_id, mes, ano);
+    const novoFeito   = feito   !== undefined ? (feito   ? 1 : 0) : (atual?.feito   ?? 0);
+    const novoChamado = chamado !== undefined ? (chamado ? 1 : 0) : (atual?.chamado ?? 0);
+    const marcadoEm   = new Date().toISOString();
 
-    res.json({ cliente_id, mes, ano, feito: Boolean(feito), marcado_em: marcadoEm });
+    db.prepare(`INSERT INTO fechamentos_mensais (cliente_id, mes, ano, feito, chamado, marcado_em) VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(cliente_id, mes, ano) DO UPDATE SET feito = excluded.feito, chamado = excluded.chamado, marcado_em = excluded.marcado_em`)
+        .run(cliente_id, mes, ano, novoFeito, novoChamado, marcadoEm);
+
+    require('../ws-fechamento').broadcast({
+        tipo: 'atualizar',
+        cliente_id: Number(cliente_id),
+        mes: Number(mes),
+        ano: Number(ano),
+        feito:   Boolean(novoFeito),
+        chamado: Boolean(novoChamado),
+    });
+
+    res.json({ cliente_id, mes, ano, feito: Boolean(novoFeito), chamado: Boolean(novoChamado), marcado_em: marcadoEm });
 });
 
 module.exports = router;

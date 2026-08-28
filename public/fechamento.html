@@ -106,6 +106,13 @@
         cursor: pointer;
     }
 
+    .chamado-check {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--diferido);
+        cursor: pointer;
+    }
+
     td.feito-col {
         text-align: center;
     }
@@ -208,6 +215,51 @@
     .table-wrap {
         overflow-x: auto;
     }
+
+    .cliente-admin-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--rule);
+        font-size: 13px;
+        gap: 12px;
+    }
+
+    .cliente-admin-row:last-child {
+        border-bottom: none;
+    }
+
+    .cliente-admin-nome {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .lista-clientes-admin {
+        max-height: 260px;
+        overflow-y: auto;
+        margin-top: 8px;
+    }
+
+    .btn-perigo {
+        border: 1px solid #d9534f;
+        background: transparent;
+        color: #d9534f;
+        border-radius: 7px;
+        padding: 4px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .btn-perigo:hover {
+        background: #d9534f;
+        color: #fff;
+    }
 </style>
 
 <div class="wrap">
@@ -220,9 +272,8 @@
         <div class="toolbar">
             <input type="month" id="mesAno">
             <input type="search" id="busca" placeholder="Buscar por nome ou CNPJ">
-            <select id="filtroContabilidade">
-                <option value="">Todas as contabilidades</option>
-            </select>
+            <input type="search" id="filtroContabilidade" placeholder="Buscar contabilidade…" list="contabSugest" autocomplete="off">
+            <datalist id="contabSugest"></datalist>
             <div class="seg" id="filtroFeito">
                 <button data-val="" class="active">Todos</button>
                 <button data-val="0">Não feito</button>
@@ -237,6 +288,7 @@
                         <th>Cliente</th>
                         <th>Contabilidade</th>
                         <th>Responsável / Contato</th>
+                        <th class="feito-col">Chamado</th>
                         <th class="feito-col">Feito</th>
                     </tr>
                 </thead>
@@ -288,6 +340,12 @@
                     <input class="miniline" id="novoClienteObs" placeholder="Observações">
                     <button class="btn" id="btnAddCliente">Adicionar cliente</button>
                 </div>
+            </div>
+
+            <div class="card">
+                <h2>Excluir cliente</h2>
+                <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:4px">Remove o cliente permanentemente, incluindo todo o histórico de fechamentos.</p>
+                <div class="lista-clientes-admin" id="listaClientesAdmin"></div>
             </div>
         </div>
     </div>
