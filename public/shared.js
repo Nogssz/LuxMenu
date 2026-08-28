@@ -102,7 +102,7 @@ async function copiarTexto(texto) {
         painel.id = 'menuLateral';
         painel.innerHTML = `<p class="ml-titulo">Módulos</p>` + MODULOS.map(m =>
             `<a class="ml-item${m.href === atual ? ' ativo' : ''}" href="${m.href}"><span class="ml-icone">${m.icone}</span>${m.titulo}</a>`
-        ).join('');
+        ).join('') + `<div id="mlUsuarioSection"></div>`;
 
         const btn = document.createElement('button');
         btn.id = 'menuLateralToggle';
@@ -136,31 +136,29 @@ async function copiarTexto(texto) {
     else document.addEventListener('DOMContentLoaded', criarMenuLateral);
 })();
 
-// Barra de usuário logado: mostra nome + botão de sair, fixo no topo direito
-// (ao lado do botão de tema, que fica em top:14px right:14px).
+// Usuário logado: mostra nome + "Sair de conta" no rodapé da sidebar.
 (function () {
-    async function criarBarraUsuario() {
-        if (document.getElementById('barraUsuario')) return;
+    async function preencherUsuarioSidebar() {
+        const secao = document.getElementById('mlUsuarioSection');
+        if (!secao) return;
         try {
             const res = await fetch('/api/auth/me');
             if (!res.ok) return;
             const usuario = await res.json();
 
-            const barra = document.createElement('div');
-            barra.id = 'barraUsuario';
-            barra.innerHTML = `<span class="bu-nome">${usuario.nome.split(' ')[0]}</span><button class="bu-sair" title="Sair">↩</button>`;
+            secao.innerHTML = `
+                <div class="ml-u-info"><span class="ml-u-nome">👤 ${usuario.nome.split(' ')[0]}</span></div>
+                <button class="ml-u-sair">↩ Sair de conta</button>`;
 
-            barra.querySelector('.bu-sair').addEventListener('click', async () => {
+            secao.querySelector('.ml-u-sair').addEventListener('click', async () => {
                 await fetch('/api/auth/logout', { method: 'POST' });
                 window.location.href = '/login.html';
             });
-
-            document.body.appendChild(barra);
         } catch { /* silencioso */ }
     }
 
-    if (document.body) criarBarraUsuario();
-    else document.addEventListener('DOMContentLoaded', criarBarraUsuario);
+    if (document.body) preencherUsuarioSidebar();
+    else document.addEventListener('DOMContentLoaded', preencherUsuarioSidebar);
 })();
 
 // Carrega o widget de chat lateral em todas as páginas autenticadas
