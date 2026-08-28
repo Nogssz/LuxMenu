@@ -196,7 +196,31 @@ function extrair() {
             $('arquivosGrid').appendChild(card);
         }
 
-        $('resultado').style.display = '';
+        // Botão ZIP
+        const btnZip = document.createElement('button');
+        btnZip.className = 'btn-zip';
+        btnZip.textContent = '⬇ Baixar tudo (.zip)';
+        btnZip.addEventListener('click', async () => {
+            btnZip.disabled = true;
+            btnZip.textContent = 'Gerando ZIP…';
+            try {
+                const zip = new JSZip();
+                for (const arq of arquivos) zip.file(`${nomeBase}.${arq.ext}`, arq.conteudo);
+                const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `${nomeBase}.zip`;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } finally {
+                btnZip.disabled = false;
+                btnZip.textContent = '⬇ Baixar tudo (.zip)';
+            }
+        });
+        $('btnZipWrap').innerHTML = '';
+        $('btnZipWrap').appendChild(btnZip);
+
+        $('resultado').style.display = 'block';
 
     } catch (e) {
         mostrarErro('Erro inesperado ao processar o certificado: ' + e.message);

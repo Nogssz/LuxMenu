@@ -60,7 +60,7 @@
         border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
     }
     .arquivo-card h3 { font-size: 13px; font-weight: 650; margin: 0; color: var(--stamp); font-family: var(--mono); }
-    .arquivo-card p  { font-size: 12px; color: var(--ink-soft); margin: 0; }
+    .arquivo-card p  { font-size: 12px; color: var(--ink-soft); margin: 0; flex: 1; }
 
     .btn-baixar {
         display: block; width: 100%; padding: 9px;
@@ -79,6 +79,16 @@
     }
     .btn-copiar:hover { border-color: var(--stamp); color: var(--stamp); }
     .btn-copiar.ok    { border-color: #0F7A52; color: #0F7A52; }
+
+    .btn-zip-wrap { margin-top: 16px; text-align: center; }
+    .btn-zip {
+        padding: 11px 28px;
+        background: var(--card); border: 1.5px solid var(--stamp);
+        color: var(--stamp); border-radius: 9px; font-size: 14px; font-weight: 600;
+        cursor: pointer; transition: background .15s, color .15s;
+    }
+    .btn-zip:hover { background: var(--stamp); color: #fff; }
+    .btn-zip:disabled { opacity: .45; cursor: default; }
 </style>
 
 <div class="wrap">
@@ -107,6 +117,7 @@
     <div class="resultado" id="resultado">
         <div class="cert-info card" id="certInfo"></div>
         <div class="arquivos-grid" id="arquivosGrid"></div>
+        <div class="btn-zip-wrap" id="btnZipWrap"></div>
     </div>
 
     <footer>extração local · o certificado não sai desta máquina</footer>
@@ -114,4 +125,5 @@
 
 <script src="shared.js"></script>
 <script src="forge.min.js"></script>
+<script src="jszip.min.js"></script>
 <script src="certificado.js"></script>
