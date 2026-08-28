@@ -57,6 +57,13 @@ router.put('/:id', (req, res) => {
     res.json(withValores(cliente));
 });
 
+router.delete('/:id', (req, res) => {
+    const existente = db.prepare('SELECT id FROM clientes WHERE id = ?').get(req.params.id);
+    if (!existente) return res.status(404).json({ error: 'cliente não encontrado' });
+    db.prepare('DELETE FROM clientes WHERE id = ?').run(req.params.id);
+    res.status(204).end();
+});
+
 router.put('/:id/campos/:campoId', (req, res) => {
     const { valor } = req.body;
     const cliente = db.prepare('SELECT id FROM clientes WHERE id = ?').get(req.params.id);
