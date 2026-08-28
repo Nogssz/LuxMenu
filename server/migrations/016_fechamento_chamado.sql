@@ -1,0 +1,1 @@
+ALTER TABLE fechamentos_mensais ADD COLUMN chamado INTEGER NOT NULL DEFAULT 0;
