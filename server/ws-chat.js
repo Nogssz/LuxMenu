@@ -26,13 +26,26 @@ function setup(app) {
         ws.on('message', (raw) => {
             let msg;
             try { msg = JSON.parse(raw); } catch { return; }
+
+            if (msg.tipo === 'digitando') {
+                const json = JSON.stringify({ tipo: 'digitando', nome: usuario.nome, username: usuario.username });
+                for (const [uid, conn] of online.entries()) {
+                    if (uid !== usuario.id && conn.ws.readyState === conn.ws.OPEN) conn.ws.send(json);
+                }
+                return;
+            }
+
             if (!msg.texto?.trim()) return;
 
-            const texto = String(msg.texto).slice(0, 1000).trim();
-            const enviado_em = new Date().toISOString();
+            const texto        = String(msg.texto).slice(0, 1000).trim();
+            const enviado_em   = new Date().toISOString();
+            const replyToId    = msg.reply_to_id != null ? (parseInt(msg.reply_to_id) || null) : null;
+            const replyToNome  = typeof msg.reply_to_nome  === 'string' ? msg.reply_to_nome.slice(0, 100)       : null;
+            const replyToTexto = typeof msg.reply_to_texto === 'string' ? msg.reply_to_texto.slice(0, 300)      : null;
 
-            const { lastInsertRowid } = db.prepare('INSERT INTO mensagens (usuario_id, texto, enviado_em) VALUES (?, ?, ?)')
-                .run(usuario.id, texto, enviado_em);
+            const { lastInsertRowid } = db.prepare(
+                'INSERT INTO mensagens (usuario_id, texto, enviado_em, reply_to_id, reply_to_nome, reply_to_texto) VALUES (?, ?, ?, ?, ?, ?)'
+            ).run(usuario.id, texto, enviado_em, replyToId, replyToNome, replyToTexto);
 
             broadcast({
                 tipo: 'mensagem',
@@ -41,6 +54,9 @@ function setup(app) {
                 username: usuario.username,
                 texto,
                 enviado_em,
+                reply_to_id:    replyToId,
+                reply_to_nome:  replyToNome,
+                reply_to_texto: replyToTexto,
             });
         });
 

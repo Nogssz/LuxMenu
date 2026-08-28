@@ -10,6 +10,9 @@
     let ultimaData = null;
     let mensagensCarregadas = [];
     let modoSearch = false;
+    let digitandoTimers = {};
+    let ultimoDigitando = 0;
+    let replyingTo = null;
 
     // ── Helpers ──
 
@@ -46,6 +49,11 @@
     function isImagem(tipo, nome) {
         if (tipo && tipo.startsWith('image/')) return true;
         return ['jpg','jpeg','png','gif','webp','bmp','svg'].includes((nome||'').split('.').pop().toLowerCase());
+    }
+
+    function isAudio(tipo, nome) {
+        if (tipo && tipo.startsWith('audio/')) return true;
+        return ['mp3','wav','ogg','m4a','opus','aac'].includes((nome||'').split('.').pop().toLowerCase());
     }
 
     // ── Favicon dinâmico com badge ──
@@ -110,14 +118,19 @@
 
     function renderArquivo(msg) {
         if (!msg.arquivo_url) return '';
+        const mt = msg.texto ? '6px' : '0';
         if (isImagem(msg.arquivo_tipo, msg.arquivo_nome)) {
             return `<a href="${esc(msg.arquivo_url)}" target="_blank" rel="noopener">
                       <img src="${esc(msg.arquivo_url)}" alt="${esc(msg.arquivo_nome)}"
-                           style="max-width:220px;max-height:160px;border-radius:8px;display:block;margin-top:${msg.texto?'6px':'0'}">
+                           style="max-width:220px;max-height:160px;border-radius:8px;display:block;margin-top:${mt}">
                     </a>`;
         }
+        if (isAudio(msg.arquivo_tipo, msg.arquivo_nome)) {
+            return `<audio controls src="${esc(msg.arquivo_url)}"
+                        style="max-width:220px;display:block;margin-top:${mt}"></audio>`;
+        }
         return `<a class="cw-arq-link" href="${esc(msg.arquivo_url)}" target="_blank" rel="noopener"
-                   download="${esc(msg.arquivo_nome)}" style="margin-top:${msg.texto?'6px':'0'}">
+                   download="${esc(msg.arquivo_nome)}" style="margin-top:${mt}">
                   <span class="cw-arq-icone">📎</span>
                   <span class="cw-arq-info">
                     <span class="cw-arq-nome">${esc(msg.arquivo_nome)}</span>
@@ -148,14 +161,22 @@
 
         const mostrarNome = !minha && ultimoAutor !== msg.username;
         const textoHtml = msg.texto ? `<span>${esc(msg.texto)}</span>` : '';
-        const btnDel = minha && msg.id
-            ? `<button class="cw-del" data-id="${msg.id}" title="Apagar mensagem">🗑</button>` : '';
+
+        if (msg.texto) div.dataset.texto = msg.texto;
+        if (minha)     div.dataset.minha = '1';
+        div.dataset.nome = msg.nome;
+
+        const replyHtml = msg.reply_to_id
+            ? `<div class="cw-reply-quote">
+                   <span class="cw-reply-autor">${esc(msg.reply_to_nome || '')}</span>
+                   <span class="cw-reply-trecho">${esc((msg.reply_to_texto || '').slice(0, 120))}</span>
+               </div>` : '';
 
         div.innerHTML = `
             ${mostrarNome ? `<span class="cw-nome">${esc(msg.nome)}</span>` : ''}
             <div class="cw-balao-wrap">
-                ${btnDel}
                 <div class="cw-balao">
+                    ${replyHtml}
                     ${textoHtml}
                     ${renderArquivo(msg)}
                     <span class="cw-hora">${formatHora(msg.enviado_em)}</span>
@@ -185,25 +206,8 @@
     // ── Deletar ──
 
     async function deletarMensagem(id) {
-        // Marca o elemento como "pendente" visualmente antes de confirmar
-        const el = document.querySelector(`.cw-msg[data-id="${id}"]`);
-        if (!el) return;
-        const btn = el.querySelector('.cw-del');
-        if (btn) { btn.textContent = '✓?'; btn.title = 'Clique de novo para confirmar'; }
-
-        // Segundo clique confirma
-        if (el.dataset.deletePending === '1') {
-            try { await fetch(`/api/chat/mensagens/${id}`, { method: 'DELETE' }); }
-            catch { /* silencioso */ }
-        } else {
-            el.dataset.deletePending = '1';
-            setTimeout(() => {
-                if (el.dataset.deletePending) {
-                    el.dataset.deletePending = '';
-                    if (btn) { btn.textContent = '🗑'; btn.title = 'Apagar mensagem'; }
-                }
-            }, 3000);
-        }
+        try { await fetch(`/api/chat/mensagens/${id}`, { method: 'DELETE' }); }
+        catch { /* silencioso */ }
     }
 
     function removerMsgDom(id) {
@@ -253,6 +257,20 @@
             : '<p class="cw-vazio">Nenhuma mensagem encontrada.</p>';
     }
 
+    // ── Indicador digitando ──
+
+    function mostrarDigitando(nome, username) {
+        const el = document.getElementById('cwDigitando');
+        if (!el) return;
+        clearTimeout(digitandoTimers[username]);
+        el.textContent = `${nome.split(' ')[0]} está digitando…`;
+        el.style.display = 'block';
+        digitandoTimers[username] = setTimeout(() => {
+            el.style.display = 'none';
+            el.textContent = '';
+        }, 2500);
+    }
+
     // ── WebSocket ──
 
     function conectarWs() {
@@ -266,8 +284,9 @@
                 else mensagensCarregadas.push(dados);
                 if (dados.username !== eu.username) notificar(dados.nome, dados.texto);
             }
-            if (dados.tipo === 'online')  renderOnline(dados.usuarios);
-            if (dados.tipo === 'deletar') removerMsgDom(dados.id);
+            if (dados.tipo === 'online')   renderOnline(dados.usuarios);
+            if (dados.tipo === 'deletar')  removerMsgDom(dados.id);
+            if (dados.tipo === 'digitando') mostrarDigitando(dados.nome, dados.username);
         });
         ws.addEventListener('close', () => setTimeout(conectarWs, 3000));
     }
@@ -285,6 +304,12 @@
 
     // ── Envio ──
 
+    function limparReply() {
+        replyingTo = null;
+        const bar = document.getElementById('cwReplyPreview');
+        if (bar) bar.style.display = 'none';
+    }
+
     async function enviar() {
         const textoEl = document.getElementById('cwTexto');
         const texto = textoEl.value.trim();
@@ -294,12 +319,25 @@
             const fd = new FormData();
             fd.append('arquivo', arquivoSelecionado);
             if (texto) fd.append('texto', texto);
+            if (replyingTo) {
+                fd.append('reply_to_id',    replyingTo.id);
+                fd.append('reply_to_nome',  replyingTo.nome);
+                fd.append('reply_to_texto', replyingTo.texto);
+            }
             try { await fetch('/api/chat/arquivo', { method: 'POST', body: fd }); }
             catch { /* silencioso */ }
             limparArquivo();
         } else {
-            if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ texto }));
+            if (ws?.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    texto,
+                    reply_to_id:    replyingTo?.id    ?? null,
+                    reply_to_nome:  replyingTo?.nome  ?? null,
+                    reply_to_texto: replyingTo?.texto ?? null,
+                }));
+            }
         }
+        limparReply();
         textoEl.value = '';
         textoEl.style.height = '36px';
     }
@@ -325,6 +363,7 @@
                 <div>
                     <strong>Chat da equipe</strong>
                     <div id="cwOnline"></div>
+                    <div id="cwDigitando" style="display:none"></div>
                 </div>
                 <div style="display:flex;gap:6px;align-items:center">
                     <button id="cwBuscarBtn" title="Pesquisar mensagens">🔍</button>
@@ -337,6 +376,13 @@
             </div>
             <div id="cwMsgs">
                 <p id="cwVazio" class="cw-vazio">Nenhuma mensagem ainda.</p>
+            </div>
+            <div id="cwReplyPreview" style="display:none">
+                <div class="cw-rp-info">
+                    <strong id="cwReplyNome"></strong>
+                    <span id="cwReplyTexto"></span>
+                </div>
+                <button id="cwReplyRemover" title="Cancelar resposta">✕</button>
             </div>
             <div id="cwArqPreview" style="display:none">
                 <span id="cwArqNome"></span>
@@ -398,6 +444,27 @@
         document.getElementById('cwTexto').addEventListener('input', function () {
             this.style.height = '36px';
             this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            const agora = Date.now();
+            if (ws?.readyState === WebSocket.OPEN && agora - ultimoDigitando > 2000) {
+                ultimoDigitando = agora;
+                ws.send(JSON.stringify({ tipo: 'digitando' }));
+            }
+        });
+
+        document.getElementById('cwTexto').addEventListener('paste', (e) => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+            for (const item of items) {
+                if (item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    if (!file) return;
+                    arquivoSelecionado = file;
+                    document.getElementById('cwArqNome').textContent = 'imagem colada';
+                    document.getElementById('cwArqPreview').style.display = 'flex';
+                    return;
+                }
+            }
         });
 
         // Arquivo
@@ -408,11 +475,92 @@
             document.getElementById('cwArqPreview').style.display = 'flex';
         });
         document.getElementById('cwArqRemover').addEventListener('click', limparArquivo);
+        document.getElementById('cwReplyRemover').addEventListener('click', limparReply);
 
-        // Deletar mensagem (delegação)
-        document.getElementById('cwMsgs').addEventListener('click', (e) => {
-            const btn = e.target.closest('.cw-del');
-            if (btn) deletarMensagem(btn.dataset.id);
+        // Menu de contexto (clique direito nas mensagens)
+        const ctxMenu = document.createElement('div');
+        ctxMenu.id = 'cwContextMenu';
+        ctxMenu.style.display = 'none';
+        document.body.appendChild(ctxMenu);
+
+        ctxMenu.addEventListener('click', (e) => e.stopPropagation());
+
+        function fecharCtx() { ctxMenu.style.display = 'none'; }
+        document.addEventListener('click', fecharCtx);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharCtx(); });
+
+        document.getElementById('cwMsgs').addEventListener('contextmenu', (e) => {
+            const msgEl = e.target.closest('.cw-msg');
+            if (!msgEl) return;
+            e.preventDefault();
+
+            const id    = msgEl.dataset.id;
+            const texto = msgEl.dataset.texto;
+            const minha = msgEl.dataset.minha === '1';
+
+            ctxMenu.innerHTML = '';
+
+            const itemReply = document.createElement('button');
+            itemReply.className = 'cw-ctx-item';
+            itemReply.innerHTML = '↩ Responder';
+            itemReply.addEventListener('click', () => {
+                replyingTo = { id: Number(id), nome: msgEl.dataset.nome || '', texto: texto || '' };
+                const bar = document.getElementById('cwReplyPreview');
+                document.getElementById('cwReplyNome').textContent  = replyingTo.nome;
+                document.getElementById('cwReplyTexto').textContent = replyingTo.texto.slice(0, 80) || '📎 arquivo';
+                bar.style.display = 'flex';
+                fecharCtx();
+                document.getElementById('cwTexto').focus();
+            });
+            ctxMenu.appendChild(itemReply);
+
+            if (texto) {
+                const sep = document.createElement('div');
+                sep.className = 'cw-ctx-sep';
+                ctxMenu.appendChild(sep);
+
+                const item = document.createElement('button');
+                item.className = 'cw-ctx-item';
+                item.innerHTML = '📋 Copiar mensagem';
+                item.addEventListener('click', async () => {
+                    await copiarTexto(texto);
+                    fecharCtx();
+                });
+                ctxMenu.appendChild(item);
+            }
+
+            if (minha && id) {
+                if (texto) {
+                    const sep = document.createElement('div');
+                    sep.className = 'cw-ctx-sep';
+                    ctxMenu.appendChild(sep);
+                }
+                const itemDel = document.createElement('button');
+                itemDel.className = 'cw-ctx-item cw-ctx-danger';
+                itemDel.innerHTML = '🗑 Apagar mensagem';
+                itemDel.addEventListener('click', () => {
+                    ctxMenu.innerHTML = `<div class="cw-ctx-confirm">Apagar esta mensagem?</div>`;
+                    const sim = document.createElement('button');
+                    sim.className = 'cw-ctx-item cw-ctx-danger';
+                    sim.textContent = '✓ Sim, apagar';
+                    sim.addEventListener('click', () => { deletarMensagem(id); fecharCtx(); });
+                    const nao = document.createElement('button');
+                    nao.className = 'cw-ctx-item';
+                    nao.textContent = 'Cancelar';
+                    nao.addEventListener('click', fecharCtx);
+                    ctxMenu.appendChild(sim);
+                    ctxMenu.appendChild(nao);
+                });
+                ctxMenu.appendChild(itemDel);
+            }
+
+            if (!ctxMenu.children.length) return;
+
+            ctxMenu.style.display = 'block';
+            const x = Math.min(e.clientX, window.innerWidth  - ctxMenu.offsetWidth  - 8);
+            const y = Math.min(e.clientY, window.innerHeight - ctxMenu.offsetHeight - 8);
+            ctxMenu.style.left = x + 'px';
+            ctxMenu.style.top  = y + 'px';
         });
     }
 

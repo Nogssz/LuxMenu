@@ -21,6 +21,7 @@ const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } }); // 2
 router.get('/historico', (req, res) => {
     const msgs = db.prepare(`
         SELECT m.id, m.texto, m.enviado_em, m.arquivo_nome, m.arquivo_url, m.arquivo_tipo, m.arquivo_tam,
+               m.reply_to_id, m.reply_to_nome, m.reply_to_texto,
                u.nome, u.username
         FROM mensagens m
         JOIN usuarios u ON u.id = m.usuario_id
@@ -34,20 +35,24 @@ router.post('/arquivo', upload.single('arquivo'), (req, res) => {
     const usuario = req.session.usuario;
     if (!req.file) return res.status(400).json({ error: 'nenhum arquivo enviado' });
 
-    const texto      = (req.body.texto || '').trim().slice(0, 500);
-    const arqNome    = req.file.originalname;
-    const arqUrl     = `/api/chat/arquivo/${req.file.filename}`;
-    const arqTipo    = req.file.mimetype;
-    const arqTam     = req.file.size;
-    const enviado_em = new Date().toISOString();
+    const texto        = (req.body.texto || '').trim().slice(0, 500);
+    const arqNome      = req.file.originalname;
+    const arqUrl       = `/api/chat/arquivo/${req.file.filename}`;
+    const arqTipo      = req.file.mimetype;
+    const arqTam       = req.file.size;
+    const enviado_em   = new Date().toISOString();
+    const replyToId    = req.body.reply_to_id    ? Number(req.body.reply_to_id)            : null;
+    const replyToNome  = req.body.reply_to_nome  ? String(req.body.reply_to_nome).slice(0, 100)  : null;
+    const replyToTexto = req.body.reply_to_texto ? String(req.body.reply_to_texto).slice(0, 300) : null;
 
-    db.prepare(`INSERT INTO mensagens (usuario_id, texto, enviado_em, arquivo_nome, arquivo_url, arquivo_tipo, arquivo_tam)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`)
-        .run(usuario.id, texto, enviado_em, arqNome, arqUrl, arqTipo, arqTam);
+    db.prepare(`INSERT INTO mensagens (usuario_id, texto, enviado_em, arquivo_nome, arquivo_url, arquivo_tipo, arquivo_tam, reply_to_id, reply_to_nome, reply_to_texto)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(usuario.id, texto, enviado_em, arqNome, arqUrl, arqTipo, arqTam, replyToId, replyToNome, replyToTexto);
 
     const msg = { tipo: 'mensagem', nome: usuario.nome, username: usuario.username,
                   texto, enviado_em, arquivo_nome: arqNome, arquivo_url: arqUrl,
-                  arquivo_tipo: arqTipo, arquivo_tam: arqTam };
+                  arquivo_tipo: arqTipo, arquivo_tam: arqTam,
+                  reply_to_id: replyToId, reply_to_nome: replyToNome, reply_to_texto: replyToTexto };
     broadcast(msg);
     res.json({ ok: true });
 });
