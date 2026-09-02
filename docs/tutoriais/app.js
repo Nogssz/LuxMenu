@@ -54,6 +54,12 @@ const VIDEOS_RETAGUARDA = {
     'vendas>lista-vendas': { geral: [64], essenciais: [65] },
     'vendas>devolucao-venda': { essenciais: [66] },
     'vendas>contratos': { essenciais: [67] },
+    'financeiro>planos-conta': { essenciais: [68] },
+    'financeiro>formas-pagamento': { essenciais: [69] },
+    'financeiro>centro-custo': { essenciais: [70] },
+    'financeiro>contas': { essenciais: [71] },
+    'financeiro>contas-pagar': { geral: [72], essenciais: [73, 74, 75] },
+    'financeiro>contas-receber': { geral: [76], essenciais: [75, 77, 78] },
 };
 
 const VIDEOS_PDV = {};

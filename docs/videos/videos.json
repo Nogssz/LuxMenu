@@ -24,6 +24,14 @@
     "categoria_nome": "Cadastros"
   },
   {
+    "id": 73,
+    "titulo": "Baixa manual do contas a pagar",
+    "url": "https://youtu.be/us-RXv3d7pA",
+    "tags": "financeiro, contas a pagar, baixa manual",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
     "id": 42,
     "titulo": "Cadastro de contador",
     "url": "https://youtu.be/l8wdy1lAz04",
@@ -64,6 +72,14 @@
     "categoria_nome": "Cadastros"
   },
   {
+    "id": 70,
+    "titulo": "Centro de custo",
+    "url": "https://youtu.be/QWEcUhIIZr0",
+    "tags": "financeiro, centro de custo, cadastro",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
     "id": 47,
     "titulo": "Como criar um grupo",
     "url": "https://youtu.be/i5poqdqzx8s",
@@ -88,12 +104,60 @@
     "categoria_nome": "Cadastros"
   },
   {
+    "id": 71,
+    "titulo": "Contas",
+    "url": "https://youtu.be/SxRvoqEHy_I",
+    "tags": "financeiro, contas, cadastro",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
+    "id": 72,
+    "titulo": "Contas a pagar - visão geral",
+    "url": "https://youtu.be/4qepmKQjO2w",
+    "tags": "financeiro, contas a pagar, visão geral",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
+    "id": 78,
+    "titulo": "Contas a receber - baixa manual",
+    "url": "https://youtu.be/V4-gHKB3Lrc",
+    "tags": "financeiro, contas a receber, baixa manual",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
+    "id": 76,
+    "titulo": "Contas a receber - visão geral",
+    "url": "https://youtu.be/C_DPaEAQ1K8",
+    "tags": "financeiro, contas a receber, visão geral",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
     "id": 39,
     "titulo": "Contatos - Visão geral",
     "url": "https://youtu.be/x6FqyzXFXgw",
     "tags": "contatos, visão geral, cadastro, pessoas",
     "descricao": null,
     "categoria_nome": "Cadastros"
+  },
+  {
+    "id": 74,
+    "titulo": "Criando contas a pagar manualmente",
+    "url": "https://youtu.be/MGa6_qQ2Y3A",
+    "tags": "financeiro, contas a pagar, criar manualmente",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
+    "id": 77,
+    "titulo": "Criando contas a receber manualmente",
+    "url": "https://youtu.be/X5d2MNlbmgo",
+    "tags": "financeiro, contas a receber, criar manualmente",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
   },
   {
     "id": 67,
@@ -150,6 +214,14 @@
     "tags": "vendas, devolução, cadastro",
     "descricao": null,
     "categoria_nome": "Orçamentos"
+  },
+  {
+    "id": 69,
+    "titulo": "Formas de pagamento",
+    "url": "https://youtu.be/aVGmW0TsSn8",
+    "tags": "financeiro, formas de pagamento, cadastro",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
   },
   {
     "id": 58,
@@ -224,11 +296,27 @@
     "categoria_nome": "Orçamentos"
   },
   {
+    "id": 68,
+    "titulo": "Plano de contas",
+    "url": "https://youtu.be/BLgn07mRsvU",
+    "tags": "financeiro, plano de contas, cadastro",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
+  },
+  {
     "id": 44,
     "titulo": "Produtos - Visão geral",
     "url": "https://youtu.be/80Yv5APfiC8",
     "tags": "estoque, produtos, cadastro, visão geral",
     "descricao": null,
     "categoria_nome": "Cadastros"
+  },
+  {
+    "id": 75,
+    "titulo": "Renegociação e estorno",
+    "url": "https://youtu.be/9FRat9k5YxM",
+    "tags": "financeiro, contas a pagar, contas a receber, renegociação, estorno",
+    "descricao": null,
+    "categoria_nome": "Financeiro"
   }
 ]
