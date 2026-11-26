@@ -207,6 +207,11 @@ function renderQuadro() {
     const pessoasOrdenadas = pessoas.filter((p) => p.ativo_agenda).sort((a, b) => a.ordem_agenda - b.ordem_agenda);
     const colunas = [{ id: null, nome: 'Geral' }, ...pessoasOrdenadas.map((p) => ({ id: p.id, nome: p.nome }))];
 
+    // innerHTML inteiro é substituído a cada atualização (inclusive no polling de 15s)
+    // — sem isso, rolar pro último quadro e não clicar a tempo faz a tela voltar pro
+    // início sozinha antes de dar pra usar o menu de "⋮" de quem está mais à direita.
+    const scrollAnterior = $('tarefasBoard').scrollLeft;
+
     $('tarefasBoard').innerHTML = colunas.map((col) => {
         const tarefasCol = tarefas
             .filter((t) => (t.pessoa_id || null) === col.id)
@@ -256,6 +261,8 @@ function renderQuadro() {
             ${concluidas.length ? `<details class="coluna-concluidas"><summary>Concluídas (${concluidas.length})</summary><div class="coluna-concluidas-lista">${concluidas.map(linhaTarefaHtml).join('')}</div></details>` : ''}
         </div>`;
     }).join('');
+
+    $('tarefasBoard').scrollLeft = scrollAnterior;
 
     $('tarefasBoard').querySelectorAll('.tarefa-check').forEach((chk) => {
         chk.addEventListener('change', async () => {
