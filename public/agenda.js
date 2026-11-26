@@ -18,6 +18,8 @@ $('agendaTabs').addEventListener('click', (e) => {
     $('painelCalendario').style.display = btn.dataset.painel === 'painelCalendario' ? '' : 'none';
 });
 
+let atualizarLarguraScrollSync = () => {};
+
 // Barra de rolagem "fantasma" fixa perto do rodapé da tela, sincronizada com o quadro de
 // tarefas — assim dá pra navegar entre as colunas sem precisar rolar até o fim de uma
 // coluna comprida pra achar a barra de rolagem real.
@@ -26,14 +28,22 @@ $('agendaTabs').addEventListener('click', (e) => {
     const board = $('tarefasBoard');
     const trilha = $('boardScrollSyncTrack');
 
+    // A barra fantasma é mais larga que o quadro (ele fica dentro do padding/borda do card),
+    // então copiar o scrollWidth deixava o curso dela ~34px menor que o do quadro — a barra
+    // batia no fim antes da última coluna aparecer inteira, escondendo o "⋮" de quem fica
+    // mais à direita. A trilha é dimensionada pra que os dois tenham o mesmo curso máximo.
     function atualizarLargura() {
-        trilha.style.width = `${board.scrollWidth}px`;
+        const cursoQuadro = Math.max(0, board.scrollWidth - board.clientWidth);
+        trilha.style.width = `${cursoQuadro + sync.clientWidth}px`;
     }
+    atualizarLarguraScrollSync = atualizarLargura;
 
     sync.addEventListener('scroll', () => { board.scrollLeft = sync.scrollLeft; });
     board.addEventListener('scroll', () => { sync.scrollLeft = board.scrollLeft; });
 
-    new ResizeObserver(atualizarLargura).observe(board);
+    const observador = new ResizeObserver(atualizarLargura);
+    observador.observe(board);
+    observador.observe(sync);
     atualizarLargura();
 })();
 
@@ -262,6 +272,9 @@ function renderQuadro() {
         </div>`;
     }).join('');
 
+    // O ResizeObserver só vê o tamanho da caixa do quadro, não o conteúdo que transborda
+    // (coluna nova não muda a caixa), então recalcula a trilha a cada render.
+    atualizarLarguraScrollSync();
     $('tarefasBoard').scrollLeft = scrollAnterior;
 
     $('tarefasBoard').querySelectorAll('.tarefa-check').forEach((chk) => {
